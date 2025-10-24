@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ApplyDeferred, prelude::*};
 use rand::Rng;
 
 use crate::{
@@ -15,7 +15,7 @@ impl Plugin for ChangeSafeAreaSizePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GlobalTask::ChangeSafeArea),
-            (start_change_safe_area, apply_deferred).chain(),
+            (start_change_safe_area, ApplyDeferred).chain(),
         )
         .add_systems(
             Update,

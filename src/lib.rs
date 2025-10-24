@@ -146,6 +146,6 @@ pub struct GameStuff;
 
 fn clear_game_stuff(mut commands: Commands, game_stuff: Query<Entity, With<GameStuff>>) {
     for entity in game_stuff.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

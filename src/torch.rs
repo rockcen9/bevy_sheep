@@ -53,7 +53,7 @@ fn torch_audio(
                 AudioPlayer::<AudioSource>(asset_server.load("audio/torch.ogg")),
                 PlaybackSettings {
                     mode: PlaybackMode::Loop,
-                    volume: Volume::new(0.5),
+                    volume: Volume::Linear(0.5),
                     ..default()
                 },
                 TorchSound,
@@ -62,7 +62,7 @@ fn torch_audio(
     } else {
         if !torh_sound.is_empty() {
             for sound in torh_sound.iter() {
-                commands.entity(sound).despawn_recursive();
+                commands.entity(sound).despawn();
             }
         }
     }
@@ -117,8 +117,8 @@ fn spawn_torch(
         let inner_spot_angle = outer_spot_angle * 0.95;
 
         let light_id = commands
-            .spawn(SpotLightBundle {
-                spot_light: SpotLight {
+            .spawn((
+                SpotLight {
                     color: css::ORANGE.into(),
                     intensity: 0.0,
                     radius: 0.0,
@@ -128,12 +128,11 @@ fn spawn_torch(
                     outer_angle: outer_spot_angle,
                     ..default()
                 },
-                transform: Transform::from_translation(event.position + Vec3::Y * light_height)
+                Transform::from_translation(event.position + Vec3::Y * light_height)
                     .looking_at(event.position, Vec3::Z),
-                ..default()
-            })
-            .insert(TorchLight)
-            .insert(GameStuff)
+                TorchLight,
+                GameStuff,
+            ))
             .id();
 
         let torch = TorchBase {

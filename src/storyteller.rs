@@ -98,7 +98,7 @@ fn storyteller_system(
         return;
     }
 
-    let Ok(_dog_transform) = dog.get_single() else {
+    let Ok(_dog_transform) = dog.single() else {
         return;
     };
     if *current_task == GlobalTask::None {

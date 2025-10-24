@@ -19,29 +19,29 @@ fn main() {
         .insert_resource(ClearColor(Color::srgb(0.4, 0.4, 0.4)))
         .init_resource::<LevelSize>()
         .add_plugins(
-                DefaultPlugins
-                    .set(AssetPlugin {
-                        meta_check: AssetMetaCheck::Never,
+            DefaultPlugins
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "That's a LOT of sheep".to_string(), // ToDo
+                        // Bind to canvas included in `index.html`
+                        canvas: Some("#bevy".to_owned()),
+                        // Tells wasm not to override default event handling, like F5 and Ctrl+R
+                        prevent_default_event_handling: false,
                         ..default()
-                    })
-                    .set(WindowPlugin {
-                        primary_window: Some(Window {
-                            title: "That's a LOT of sheep".to_string(), // ToDo
-                            // Bind to canvas included in `index.html`
-                            canvas: Some("#bevy".to_owned()),
-                            // Tells wasm not to override default event handling, like F5 and Ctrl+R
-                            prevent_default_event_handling: false,
-                            ..default()
-                        }),
-                        ..default()
-                    })
-                    .set(ImagePlugin::default_nearest()),
-            )
-            .insert_resource(DirectionalLightShadowMap { size: 4096 })
-            .add_plugins(GamePlugin)
-            .add_systems(Startup, set_window_icon)
-            // .add_plugins(WorldInspectorPlugin::new()
-            .run();
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
+        .insert_resource(DirectionalLightShadowMap { size: 4096 })
+        .add_plugins(GamePlugin)
+        .add_systems(Startup, set_window_icon)
+        // .add_plugins(WorldInspectorPlugin::new()
+        .run();
 }
 
 // Sets the icon on windows and X11
@@ -49,7 +49,9 @@ fn set_window_icon(
     windows: NonSend<WinitWindows>,
     primary_window: Query<Entity, With<PrimaryWindow>>,
 ) {
-    let primary_entity = primary_window.single();
+    let Ok(primary_entity) = primary_window.single() else {
+        return;
+    };
     let Some(primary) = windows.get_window(primary_entity) else {
         return;
     };

@@ -280,7 +280,7 @@ fn init_safeareawalk_walk(
     safeareas: Query<&SafeArea>,
     level_size: Res<LevelSize>,
 ) {
-    let Ok(safearea) = safeareas.get_single() else {
+    let Ok(safearea) = safeareas.single() else {
         return;
     };
 
@@ -322,14 +322,14 @@ pub fn sheep_state(
                 }
                 Decision::RandomWalk => {
                     // info!("new random walk for {:?}", e);
-                    init_random_walk.send(InitRandomWalk { e });
+                    init_random_walk.write(InitRandomWalk { e });
                 }
                 Decision::MoveToSafeArea => {
-                    init_safe_walk.send(SafeAreaWalk { e });
+                    init_safe_walk.write(SafeAreaWalk { e });
                 }
                 Decision::Escape => {
                     // For now this seems ok
-                    init_escape_walk.send(EscapeWalk { e });
+                    init_escape_walk.write(EscapeWalk { e });
                 }
                 Decision::Scared => {
                     *dec = Decision::Idle;
@@ -392,7 +392,7 @@ pub fn update_scared_sheeps(
     >,
     dog: Query<&Transform, With<Dog>>,
 ) {
-    let Ok(dog_transform) = dog.get_single() else {
+    let Ok(dog_transform) = dog.single() else {
         return;
     };
 

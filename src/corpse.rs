@@ -25,7 +25,7 @@ fn corpse_system(mut commands: Commands, time: Res<Time>, mut query: Query<(Enti
     for (entity, mut corpse) in query.iter_mut() {
         corpse.time -= time.delta_secs();
         if corpse.time <= 0.0 {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

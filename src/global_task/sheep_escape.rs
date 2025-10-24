@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ApplyDeferred, prelude::*};
 use rand::Rng;
 
 use crate::{
@@ -18,7 +18,7 @@ impl Plugin for SheepEscapePlugin {
         app.add_systems(OnEnter(GlobalTask::SheepEscape), generate_new_wave)
             .add_systems(
                 Update,
-                (apply_deferred, check_wave_finish, wave_executor)
+                (ApplyDeferred, check_wave_finish, wave_executor)
                     .chain()
                     .run_if(in_state(GlobalTask::SheepEscape))
                     .in_set(GameSet::Playing),
@@ -151,7 +151,7 @@ fn wave_executor(
     level_size: Res<LevelSize>,
     mut sheep_wave_status: ResMut<SheepWaveStatus>,
 ) {
-    let Ok(dog_transform) = dog.get_single() else {
+    let Ok(dog_transform) = dog.single() else {
         return;
     };
 

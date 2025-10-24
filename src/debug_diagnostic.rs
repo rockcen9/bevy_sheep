@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ApplyDeferred, prelude::*};
 
 use crate::{
     safe_area::SheepCounter,
@@ -16,7 +16,7 @@ impl Plugin for DiagnosticPlugin {
             OnEnter(GameState::Playing),
             (
                 setup_diagnostic_panel,
-                apply_deferred,
+                ApplyDeferred,
                 setup_counter,
                 setup_sheep_counter,
                 setup_alive_sheep_counter,
@@ -67,7 +67,7 @@ pub fn setup_counter(mut commands: Commands, panels: Query<Entity, With<Diagnost
         .spawn((Text::new("FPS: "), text_font, FrameCounter))
         .id();
 
-    if let Ok(panel) = panels.get_single() {
+    if let Ok(panel) = panels.single() {
         commands.entity(panel).add_child(frame_counter);
     }
 }
@@ -94,7 +94,7 @@ pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<Di
         ))
         .id();
 
-    if let Ok(panel) = panels.get_single() {
+    if let Ok(panel) = panels.single() {
         commands.entity(panel).add_child(sheep_counter);
     }
 }
@@ -131,7 +131,7 @@ pub fn setup_alive_sheep_counter(
         ))
         .id();
 
-    if let Ok(panel) = panels.get_single() {
+    if let Ok(panel) = panels.single() {
         commands.entity(panel).add_child(sheep_counter);
     }
 }

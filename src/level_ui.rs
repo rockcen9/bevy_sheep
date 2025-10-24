@@ -76,7 +76,7 @@ fn create_level_ui_system(
     ev_create_level_ui.clear();
 }
 
-fn spawn_bar(parent: &mut ChildBuilder) {
+fn spawn_bar(parent: &mut ChildSpawnerCommands) {
     parent
         .spawn(Node {
             height: Val::Px(10.0),
@@ -119,12 +119,12 @@ fn show_stamina(
     mut query: Query<(&mut Node, &mut BackgroundColor), With<StaminaState>>,
     staminas: Query<&Stamina>,
 ) {
-    let Ok(stamina) = staminas.get_single() else {
+    let Ok(stamina) = staminas.single() else {
         warn!("Stamina not found");
         return;
     };
 
-    let Ok((mut node, mut background_color)) = query.get_single_mut() else {
+    let Ok((mut node, mut background_color)) = query.single_mut() else {
         warn!("Stamina ui not found");
         return;
     };

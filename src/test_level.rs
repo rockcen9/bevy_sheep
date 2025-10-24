@@ -40,25 +40,23 @@ pub fn setup(
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
     cascades.maximum_distance = 100.0;
-    commands
-        .spawn(DirectionalLightBundle {
-            transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-            directional_light: DirectionalLight {
-                shadows_enabled: true,
-                color: Srgba::hex(DAY_SUN_COLOR).unwrap().into(),
-                illuminance: SUN_BASE_ILLUMINANCE,
-                ..default()
-            },
-
-            cascade_shadow_config: cascades.build(),
+    commands.spawn((
+        Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
+        DirectionalLight {
+            shadows_enabled: true,
+            color: Srgba::hex(DAY_SUN_COLOR).unwrap().into(),
+            illuminance: SUN_BASE_ILLUMINANCE,
             ..default()
-        })
-        .insert(GameStuff);
+        },
+        cascades.build(),
+        GameStuff,
+    ));
 
     //ambient ligjt
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: AMBIENT_BASE_ILLUMINANCE,
+        affects_lightmapped_meshes: true,
     });
 
     let square = meshes.add(create_plane_mesh());
@@ -70,7 +68,8 @@ pub fn setup(
     //spawn trees
     let tree_material = materials.add(StandardMaterial {
         base_color_texture: Some(tree_texture),
-        alpha_mode: AlphaMode::Blend,
+        alpha_mode: AlphaMode::Mask(0.5),
+        double_sided: true,
         perceptual_roughness: 0.9,
         ..default()
     });
@@ -92,37 +91,35 @@ pub fn setup(
             continue;
         }
 
-        commands
-            .spawn((
-                Mesh3d(square.clone()),
-                MeshMaterial3d(tree_material.clone()),
-                Transform::from_xyz(pos.x, pos.y, pos.z)
-                    .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(2.5, 2.6, 5.0) * 2.0),
-                GameStuff,
-            ));
+        commands.spawn((
+            Mesh3d(square.clone()),
+            MeshMaterial3d(tree_material.clone()),
+            Transform::from_xyz(pos.x, pos.y, pos.z)
+                .with_rotation(get_sprite_rotation())
+                .with_scale(Vec3::new(2.5, 2.6, 5.0) * 2.0),
+            GameStuff,
+        ));
     }
 
     //green plane
-    commands
-        .spawn((
-            Mesh3d(meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0))),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: Srgba::hex("5d9669").unwrap().into(),
-                reflectance: 0.05,
-                ..default()
-            })),
-            Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
-                EulerRot::XYZ,
-                -PI / 2.0,
-                0.0,
-                0.0,
-            )),
-            GameStuff,
-            Name::new("Green Plane"),
-        ));
+    commands.spawn((
+        Mesh3d(meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Srgba::hex("5d9669").unwrap().into(),
+            reflectance: 0.05,
+            ..default()
+        })),
+        Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
+            EulerRot::XYZ,
+            -PI / 2.0,
+            0.0,
+            0.0,
+        )),
+        GameStuff,
+        Name::new("Green Plane"),
+    ));
 
-    spawn_player_event.send(SpawnPlayer {
+    spawn_player_event.write(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),
     });
 
@@ -145,7 +142,7 @@ pub fn setup(
             continue;
         }
 
-        spawn_torch.send(SpawnTorch { position: pos });
+        spawn_torch.write(SpawnTorch { position: pos });
         torch_poses.push(pos);
     }
 
@@ -160,9 +157,9 @@ pub fn setup(
         })
         .insert(GameStuff);
 
-    spawn_shepherd.send(SpawnShepherd {
+    spawn_shepherd.write(SpawnShepherd {
         pos: Vec3::new(0.0, 0.0, -level_size.0),
     });
 
-    create_level_ui.send(CreateLevelUi);
+    create_level_ui.write(CreateLevelUi);
 }

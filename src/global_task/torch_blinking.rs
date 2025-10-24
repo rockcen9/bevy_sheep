@@ -1,5 +1,6 @@
-use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashSet};
+use bevy::{color::palettes::css, ecs::schedule::ApplyDeferred, prelude::*};
 use rand::Rng;
+use std::collections::HashSet;
 
 use crate::{
     level_ui::TaskText,
@@ -20,12 +21,7 @@ impl Plugin for TorchBlinkingPlugin {
         app.add_systems(OnEnter(GlobalTask::TorchProblem), start_fire_problems)
             .add_systems(
                 Update,
-                (
-                    apply_deferred,
-                    delight,
-                    update_delight_system,
-                    apply_deferred,
-                )
+                (ApplyDeferred, delight, update_delight_system, ApplyDeferred)
                     .chain()
                     .run_if(in_state(GlobalTask::TorchProblem))
                     .in_set(GameSet::Playing),
@@ -148,7 +144,7 @@ fn update_delight_system(
 
         if ok_torches == status.torches_to_lit.len() {
             global_task.set(GlobalTask::None);
-            if let Ok(mut text) = texts.get_single_mut() {
+            if let Ok(mut text) = texts.single_mut() {
                 text.0 = format!("");
             }
             return;
@@ -163,7 +159,7 @@ fn update_delight_system(
             }
         }
 
-        if let Ok(mut text) = texts.get_single_mut() {
+        if let Ok(mut text) = texts.single_mut() {
             text.0 = format!("The torches are going out! Wake up the shepherd so he can light them! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
         }
     }

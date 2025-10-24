@@ -75,7 +75,7 @@ pub struct Shepherd;
 pub struct IgniteAllTorhes;
 
 fn start_ignite_torches(mut commands: Commands, query: Query<Entity, With<Shepherd>>) {
-    if let Ok(entity) = query.get_single() {
+    if let Ok(entity) = query.single() {
         commands.entity(entity).insert(IgniteAllTorhes);
     }
 }
@@ -86,7 +86,7 @@ fn ignite_all_torhes(
     torches: Query<(&Transform, &TorchBase, Option<&TorchDelight>)>,
     mut ignite: EventWriter<IgniteTorch>,
 ) {
-    let Ok((herd_entity, mut walk_controller, transform)) = query.get_single_mut() else {
+    let Ok((herd_entity, mut walk_controller, transform)) = query.single_mut() else {
         return;
     };
 
@@ -105,7 +105,7 @@ fn ignite_all_torhes(
 
     if let Some(nearest_torch) = nearest_torch {
         if dist < IGNITE_RADIUS {
-            ignite.send(IgniteTorch {
+            ignite.write(IgniteTorch {
                 position: transform.translation,
                 radius: IGNITE_RADIUS,
             });
@@ -159,7 +159,7 @@ fn bark_system(
     mut events: EventReader<Bark>,
     query: Query<(Entity, &Transform), With<Shepherd>>,
 ) {
-    let Ok((entity, transform)) = query.get_single() else {
+    let Ok((entity, transform)) = query.single() else {
         return;
     };
     for event in events.read() {

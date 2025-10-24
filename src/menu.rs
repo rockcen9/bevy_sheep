@@ -66,7 +66,7 @@ Good luck!\n"),
 
 fn clear_menu(mut commands: Commands, query: Query<Entity, With<MainMenu>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 

@@ -201,7 +201,7 @@ fn spawn_player_by_event(
                     PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
-                        volume: Volume::new(0.5),
+                        volume: Volume::Linear(0.5),
                         ..default()
                     },
                 ));
@@ -212,7 +212,7 @@ fn spawn_player_by_event(
                     PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
-                        volume: Volume::new(2.0),
+                        volume: Volume::Linear(2.0),
                         ..default()
                     },
                 ));
@@ -235,16 +235,20 @@ fn player_movemnt_by_mouse(
     input: Res<ButtonInput<KeyCode>>,
     mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>,
 ) {
-    let Ok((transform, mut vel, mut stamine)) = player_query.get_single_mut() else {
+    let Ok((transform, mut vel, mut stamine)) = player_query.single_mut() else {
         return;
     };
 
-    let Ok(mut footstep) = footstep_source.get_single_mut() else {
+    let Ok(mut footstep) = footstep_source.single_mut() else {
         return;
     };
 
-    let (camera, camera_transform) = q_camera.single();
-    let window = q_window.single();
+    let Ok((camera, camera_transform)) = q_camera.single() else {
+        return;
+    };
+    let Ok(window) = q_window.single() else {
+        return;
+    };
 
     let Some(cursor_position) = window.cursor_position() else {
         // if the cursor is not inside the window, we can't do anything
@@ -308,11 +312,11 @@ pub fn bark(
     time: Res<Time>,
     bark_sink: Query<&AudioSink, With<DogBarkSource>>,
 ) {
-    let Ok(bark) = player_query.get_single() else {
+    let Ok(bark) = player_query.single() else {
         return;
     };
 
-    let Ok(mut stamina) = stamina.get_single_mut() else {
+    let Ok(mut stamina) = stamina.single_mut() else {
         return;
     };
 
@@ -328,7 +332,7 @@ pub fn bark(
             stamina.blocked = true;
         }
 
-        event_writer.send(Bark {
+        event_writer.write(Bark {
             radius: radius,
             position: bark.translation,
         });
@@ -336,7 +340,7 @@ pub fn bark(
     }
 
     if input.pressed(KeyCode::Space) {
-        event_writer.send(Bark {
+        event_writer.write(Bark {
             radius: radius,
             position: bark.translation,
         });
@@ -344,13 +348,13 @@ pub fn bark(
     }
 
     if play_bark {
-        let Ok(bark) = bark_sink.get_single() else {
+        let Ok(bark) = bark_sink.single() else {
             warn!("Could not get bark source");
             return;
         };
         bark.play();
     } else {
-        let Ok(bark) = bark_sink.get_single() else {
+        let Ok(bark) = bark_sink.single() else {
             warn!("Could not get bark source");
             return;
         };
@@ -364,11 +368,11 @@ fn player_movemnt_by_wasd(
     time: Res<Time>,
     mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>,
 ) {
-    let Ok((mut player, mut stamina)) = player_query.get_single_mut() else {
+    let Ok((mut player, mut stamina)) = player_query.single_mut() else {
         return;
     };
 
-    let Ok(mut footstep) = footstep_source.get_single_mut() else {
+    let Ok(mut footstep) = footstep_source.single_mut() else {
         warn!("Could not get footstep source");
         return;
     };
@@ -438,14 +442,14 @@ fn camera_movement(
     mut scroll_evr: EventReader<MouseWheel>,
     mut sun: Query<&mut CascadeShadowConfig>,
 ) {
-    let Ok((mut camera, mut distance)) = camera_query.get_single_mut() else {
+    let Ok((mut camera, mut distance)) = camera_query.single_mut() else {
         return;
     };
-    let Ok(player) = player_query.get_single() else {
+    let Ok(player) = player_query.single() else {
         return;
     };
 
-    let Ok(mut sun) = sun.get_single_mut() else {
+    let Ok(mut sun) = sun.single_mut() else {
         return;
     };
 
@@ -479,11 +483,11 @@ fn set_cam_distance(
     player_query: Query<&Transform, With<Player>>,
     _: Query<&CascadeShadowConfig>,
 ) {
-    let Ok(player) = player_query.get_single() else {
+    let Ok(player) = player_query.single() else {
         return;
     };
 
-    let Ok((e, camera)) = camera_without_dist.get_single() else {
+    let Ok((e, camera)) = camera_without_dist.single() else {
         return;
     };
 
@@ -496,7 +500,7 @@ fn set_anim_state(
     mut player: Query<(&mut AutoAnim<PlayerAnim>, &Velocity, &mut Transform)>,
     input: Res<ButtonInput<KeyCode>>,
 ) {
-    let Ok((mut player, vel, mut t)) = player.get_single_mut() else {
+    let Ok((mut player, vel, mut t)) = player.single_mut() else {
         return;
     };
 

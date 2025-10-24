@@ -68,14 +68,14 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
                 Text::new("Ok"),
                 text_font.clone(),
             ));
-            
+
         });
     });
 }
 
 fn cleanup_finish_screen(mut commands: Commands, query: Query<Entity, With<FinishScreen>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 

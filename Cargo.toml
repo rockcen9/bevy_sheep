@@ -26,7 +26,7 @@ dev = ["bevy/dynamic_linking"]
 # All of Bevy's default features exept for the audio related ones (bevy_audio, vorbis), since they clash with bevy_kira_audio
 #   and android_shared_stdcxx, since that is covered in `mobile`
 [dependencies]
-bevy = { version = "0.15.3" }
+bevy = { version = "0.16.1" }
 bevy_asset_loader = { version = "0.18" }
 rand = { version = "0.8.3" }
 webbrowser = { version = "0.8", features = ["hardened"] }
@@ -34,7 +34,7 @@ webbrowser = { version = "0.8", features = ["hardened"] }
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.30", default-features = false }
 image = { version = "0.25", default-features = false }
-bevy_spatial = "0.10.0"
+bevy_spatial = "0.11.0"
 ahash = { workspace = true }
 # bevy-inspector-egui = "0.25"  # Commented out for now
 

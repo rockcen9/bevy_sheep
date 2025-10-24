@@ -1,4 +1,4 @@
-use bevy::{audio::Volume, prelude::*};
+use bevy::{audio::Volume, ecs::schedule::ApplyDeferred, prelude::*};
 use rand::Rng;
 
 use crate::{
@@ -24,17 +24,17 @@ impl Plugin for WolfPlugin {
             .add_systems(
                 Update,
                 (
-                    apply_deferred,
+                    ApplyDeferred,
                     wolf_spawner,
                     catch_system,
-                    apply_deferred,
+                    ApplyDeferred,
                     eating_system,
-                    apply_deferred,
+                    ApplyDeferred,
                     go_out_system,
-                    apply_deferred,
+                    ApplyDeferred,
                     run_out_system,
                     bark,
-                    apply_deferred,
+                    ApplyDeferred,
                 )
                     .chain(),
             )
@@ -203,11 +203,9 @@ fn catch_system(
                         timer: Timer::from_seconds(0.1, TimerMode::Repeating),
                     });
 
-                commands
-                    .entity(try_to_catch_sheep.target)
-                    .despawn_recursive();
+                commands.entity(try_to_catch_sheep.target).despawn();
 
-                spawn_corpse.send(SpawnCorpse {
+                spawn_corpse.write(SpawnCorpse {
                     position: sheep.translation,
                 });
 
@@ -216,7 +214,7 @@ fn catch_system(
                         AudioPlayer::<AudioSource>(asset_server.load("audio/kill_sound.ogg")),
                         PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: Volume::new(0.7),
+                            volume: Volume::Linear(0.7),
                             spatial: true,
                             ..default()
                         },
@@ -291,7 +289,7 @@ fn go_out_system(
         walk_controller.target_velocity = dir * WOLF_SPEED;
 
         if wolf_transform.translation.distance(Vec3::ZERO) > level_size.0 * 3.0 {
-            commands.entity(wolf).despawn_recursive();
+            commands.entity(wolf).despawn();
         }
         if safearea.iter().any(|area| {
             area.in_area(Vec2 {

@@ -1,6 +1,9 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, color::{Srgba, LinearRgba}};
+use bevy::{
+    color::{LinearRgba, Srgba},
+    prelude::*,
+};
 
 use crate::{
     safe_area::{LandSafeArea, SafeArea},
@@ -112,7 +115,7 @@ fn sunday_system(
     mut sun: Query<(&mut Transform, &mut DirectionalLight)>,
     mut ambient_light: ResMut<AmbientLight>,
 ) {
-    let Ok((mut transform, mut light)) = sun.get_single_mut() else {
+    let Ok((mut transform, mut light)) = sun.single_mut() else {
         warn!("Could not get directional light");
         return;
     };
@@ -131,7 +134,8 @@ fn sunday_system(
     } else if uniform_time < EVENING_TIME {
         let sun_falloff = 1.0 - (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
         let color: Color = (LinearRgba::from(Srgba::hex(DAY_SUN_COLOR).unwrap()) * sun_falloff
-            + LinearRgba::from(Srgba::hex(EVENING_SUN_COLOR).unwrap()) * (1.0 - sun_falloff)).into();
+            + LinearRgba::from(Srgba::hex(EVENING_SUN_COLOR).unwrap()) * (1.0 - sun_falloff))
+            .into();
         let sun_angle = sun_falloff * std::f32::consts::PI / 4.0;
         let illuminance =
             SUN_BASE_ILLUMINANCE * sun_falloff + SUN_EVENING_ILLUMINANCE * (1.0 - sun_falloff);
@@ -158,8 +162,10 @@ fn sunday_system(
         light.color = color;
         light.illuminance = illuminance;
 
-        ambient_light.color = (LinearRgba::from(Srgba::hex(AMBIENT_NIGHT_COLOR).unwrap()) * (1.0 - sun_falloff)
-            + LinearRgba::from(Srgba::hex(AMBIENT_DAY_COLOR).unwrap()) * sun_falloff).into();
+        ambient_light.color = (LinearRgba::from(Srgba::hex(AMBIENT_NIGHT_COLOR).unwrap())
+            * (1.0 - sun_falloff)
+            + LinearRgba::from(Srgba::hex(AMBIENT_DAY_COLOR).unwrap()) * sun_falloff)
+            .into();
         ambient_light.brightness =
             AMBIENT_NIGHT_ILLUMINANCE * (1.0 - sun_falloff) + sun_falloff * AMBIENT_DAY_ILLUMINANCE;
     } else {
@@ -211,6 +217,6 @@ fn safe_area_evening_decrease(
 
 fn delete_land_area_at_night(mut commands: Commands, mut areas: Query<Entity, With<LandSafeArea>>) {
     for entity in areas.iter_mut() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
