@@ -8,9 +8,10 @@ use rand::Rng;
 
 use crate::{
     player::Dog,
-    sheep::{Sheep, StartSheepCount, IsScared, GoTo},
+    sheep::{GoTo, IsScared, Sheep, StartSheepCount},
     sunday::{DayState, EpisodeTime},
-    GameSet, GameState, test_level::LevelSize,
+    test_level::LevelSize,
+    GameSet, GameState,
 };
 
 pub struct StorytellerPlugin;
@@ -21,7 +22,7 @@ impl Plugin for StorytellerPlugin {
             level_start_time: 0.0,
             level_duration: 6.0 * 60.0,
             safearea_count: 1,
-            change_safe_area_was_spanwed: false
+            change_safe_area_was_spanwed: false,
         })
         .init_resource::<Score>()
         .add_systems(
@@ -50,7 +51,7 @@ pub struct Storyteller {
 
 impl Storyteller {
     pub fn get_level_time(&self, time: &Time) -> f32 {
-        time.elapsed_seconds() - self.level_start_time
+        time.elapsed_secs() - self.level_start_time
     }
 
     pub fn get_level_unfirom_time(&self, time: &Time) -> f32 {
@@ -63,7 +64,7 @@ pub struct Score(pub f32);
 
 fn setup_start_time(mut commands: Commands, mut teller: ResMut<Storyteller>, time: Res<Time>) {
     commands.remove_resource::<FailReason>();
-    teller.level_start_time = time.elapsed_seconds();
+    teller.level_start_time = time.elapsed_secs();
 }
 
 #[derive(Resource)]
@@ -101,11 +102,11 @@ fn storyteller_system(
         return;
     };
     if *current_task == GlobalTask::None {
-        delay.0 -= time.delta_seconds();
+        delay.0 -= time.delta_secs();
         if delay.0 > 0.0 {
             return;
         }
-        let level_time = time.elapsed_seconds() - teller.level_start_time;
+        let level_time = time.elapsed_secs() - teller.level_start_time;
         let unfiorm_time = level_time / teller.level_duration;
 
         // let episode_time = episode_time.0;
@@ -144,16 +145,16 @@ fn level_timer(
     score: Res<Score>,
 ) {
     for mut timer in timers.iter_mut() {
-        let level_time = time.elapsed_seconds() - teller.level_start_time;
+        let level_time = time.elapsed_secs() - teller.level_start_time;
         if teller.level_duration - level_time > 0.0 {
             let dur = Duration::from_secs_f32(teller.level_duration - level_time);
 
             let time = format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
             let score_text = format!("Score: {:.1}", score.0);
 
-            timer.sections[0].value = format!("{} {}", time, score_text);
+            timer.0 = format!("{} {}", time, score_text);
         } else {
-            timer.sections[0].value = format!("{:02}:{:02}", 0, 0);
+            timer.0 = format!("{:02}:{:02}", 0, 0);
             next_state.set(GameState::Finish);
         }
     }
@@ -166,7 +167,7 @@ fn score_system(
     start_sheep_count: Res<StartSheepCount>,
 ) {
     let lived_sheep = alived_sheep.iter().count() as f32 / start_sheep_count.0;
-    score.0 = lived_sheep * time.elapsed_seconds();
+    score.0 = lived_sheep * time.elapsed_secs();
 }
 
 fn fail_system(
@@ -195,5 +196,5 @@ pub enum GlobalTask {
     WolfAttack,
     CollectSheepInArea,
     TorchProblem,
-    ChangeSafeArea
+    ChangeSafeArea,
 }

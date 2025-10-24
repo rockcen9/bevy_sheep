@@ -1,4 +1,8 @@
-use bevy::{prelude::*, audio::{PlaybackMode, Volume}, color::palettes::css};
+use bevy::{
+    audio::{PlaybackMode, Volume},
+    color::palettes::css,
+    prelude::*,
+};
 
 use crate::{
     common_storage::CommonStorage,
@@ -31,9 +35,9 @@ pub struct TorchSound;
 
 fn torch_audio(
     mut commands: Commands,
-    torches : Query<&TorchBase>,
-    torh_sound : Query<Entity, With<TorchSound>>,
-    asset_server : Res<AssetServer>
+    torches: Query<&TorchBase>,
+    torh_sound: Query<Entity, With<TorchSound>>,
+    asset_server: Res<AssetServer>,
 ) {
     let mut is_lites = false;
     for torch in torches.iter() {
@@ -46,15 +50,13 @@ fn torch_audio(
     if is_lites {
         if torh_sound.is_empty() {
             commands.spawn((
-                AudioSourceBundle::<AudioSource> {
-                    source : asset_server.load("audio/torch.ogg"),
-                    settings : PlaybackSettings {
-                        mode : PlaybackMode::Loop,
-                        volume : Volume::new(0.5),
-                        ..default()
-                    }
+                AudioPlayer::<AudioSource>(asset_server.load("audio/torch.ogg")),
+                PlaybackSettings {
+                    mode: PlaybackMode::Loop,
+                    volume: Volume::new(0.5),
+                    ..default()
                 },
-                TorchSound
+                TorchSound,
             ));
         }
     } else {
@@ -145,14 +147,11 @@ fn spawn_torch(
 
         commands.spawn((
             torch,
-            PbrBundle {
-                transform: Transform::from_translation(event.position)
-                    .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(2.0 / 7.0, 2.0 / 7.0, 2.0)),
-                material: torch_material.0.clone(),
-                mesh: common_storage.plane.clone(),
-                ..default()
-            },
+            Mesh3d(common_storage.plane.clone()),
+            MeshMaterial3d(torch_material.0.clone()),
+            Transform::from_translation(event.position)
+                .with_rotation(get_sprite_rotation())
+                .with_scale(Vec3::new(2.0 / 7.0, 2.0 / 7.0, 2.0)),
             GameStuff,
         ));
     }

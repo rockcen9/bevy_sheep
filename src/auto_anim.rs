@@ -40,9 +40,9 @@ fn auto_anim<T : AnimSet + Send + Sync + 'static>(
     for (entity, mut auto_anim) in auto_anim_query.iter_mut() {
         if auto_anim.timer.tick(time.delta()).just_finished() {
             auto_anim.current_frame = (auto_anim.current_frame + 1) % (auto_anim.set.get_index_range().end + 1 - auto_anim.set.get_index_range().start);
-            commands.entity(entity).insert(materials.materials[
+            commands.entity(entity).insert(MeshMaterial3d(materials.materials[
                 auto_anim.set.get_index_range().start + auto_anim.current_frame
-            ].clone());
+            ].clone()));
         }
     }
 }

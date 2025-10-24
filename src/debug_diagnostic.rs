@@ -34,38 +34,37 @@ impl Plugin for DiagnosticPlugin {
 pub struct DiagnosticPanel;
 
 pub fn setup_diagnostic_panel(mut commands: Commands) {
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                top: Val::Px(0.0),
-                left: Val::Px(0.0),
-                width: Val::Px(200.0),
-                position_type: PositionType::Absolute,
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+    commands.spawn((
+        Node {
+            top: Val::Px(0.0),
+            left: Val::Px(0.0),
+            width: Val::Px(200.0),
+            position_type: PositionType::Absolute,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
 
-                align_self: AlignSelf::Stretch,
+            align_self: AlignSelf::Stretch,
 
-                ..default()
-            },
-            background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
             ..default()
-        })
-        .insert(DiagnosticPanel)
-        .insert(GameStuff);
+        },
+        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
+        DiagnosticPanel,
+        GameStuff,
+    ));
 }
 
 #[derive(Component)]
 pub struct FrameCounter;
 
 pub fn setup_counter(mut commands: Commands, panels: Query<Entity, With<DiagnosticPanel>>) {
-    let mut text_style = TextStyle::default();
-    text_style.font_size = FONT_SIZE;
+    let text_font = TextFont {
+        font_size: FONT_SIZE,
+        ..default()
+    };
 
     let frame_counter = commands
-        .spawn(TextBundle::from_section("FPS: ", text_style))
-        .insert(FrameCounter)
+        .spawn((Text::new("FPS: "), text_font, FrameCounter))
         .id();
 
     if let Ok(panel) = panels.get_single() {
@@ -75,7 +74,7 @@ pub fn setup_counter(mut commands: Commands, panels: Query<Entity, With<Diagnost
 
 fn fps_counting(mut query: Query<&mut Text, With<FrameCounter>>, time: Res<Time>) {
     for mut text in &mut query {
-        text.sections[0].value = format!("FPS: {:.0}", 1.0 / time.delta_seconds());
+        *text = Text::new(format!("FPS: {:.0}", 1.0 / time.delta_secs()));
     }
 }
 
@@ -83,11 +82,16 @@ fn fps_counting(mut query: Query<&mut Text, With<FrameCounter>>, time: Res<Time>
 pub struct SheepDebugCounter;
 
 pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<DiagnosticPanel>>) {
-    let mut text_style = TextStyle::default();
-    text_style.font_size = FONT_SIZE;
+    let text_font = TextFont {
+        font_size: FONT_SIZE,
+        ..default()
+    };
     let sheep_counter = commands
-        .spawn(TextBundle::from_section("Sheep in safe area: ", text_style))
-        .insert(SheepDebugCounter)
+        .spawn((
+            Text::new("Sheep in safe area: "),
+            text_font,
+            SheepDebugCounter,
+        ))
         .id();
 
     if let Ok(panel) = panels.get_single() {
@@ -101,10 +105,10 @@ pub fn sheep_counter_text(
     start_sheep_count: Res<StartSheepCount>,
 ) {
     for mut text in &mut query {
-        text.sections[0].value = format!(
+        *text = Text::new(format!(
             "Sheep in safe area: {}/{}",
             sheep_counter.count, start_sheep_count.0
-        );
+        ));
     }
 }
 
@@ -115,11 +119,16 @@ pub fn setup_alive_sheep_counter(
     mut commands: Commands,
     panels: Query<Entity, With<DiagnosticPanel>>,
 ) {
-    let mut text_style = TextStyle::default();
-    text_style.font_size = FONT_SIZE;
+    let text_font = TextFont {
+        font_size: FONT_SIZE,
+        ..default()
+    };
     let sheep_counter = commands
-        .spawn(TextBundle::from_section("Sheep alive: ", text_style))
-        .insert(SheepAliveDebugCounter)
+        .spawn((
+            Text::new("Sheep alive: "),
+            text_font,
+            SheepAliveDebugCounter,
+        ))
         .id();
 
     if let Ok(panel) = panels.get_single() {
@@ -134,9 +143,9 @@ pub fn alive_sheep_counter(
 ) {
     let alive_sheep_count = sheeps.iter().count();
     for mut text in &mut query {
-        text.sections[0].value = format!(
+        *text = Text::new(format!(
             "Sheep alive: {}/{}",
             alive_sheep_count, start_sheep_count.0
-        );
+        ));
     }
 }

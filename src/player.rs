@@ -1,17 +1,19 @@
 use std::f32::consts::PI;
 
 use bevy::{
+    audio::{PlaybackMode, Volume},
     input::mouse::MouseWheel,
     pbr::{CascadeShadowConfig, CascadeShadowConfigBuilder},
     prelude::*,
-    window::PrimaryWindow, audio::{Volume, PlaybackMode},
+    window::PrimaryWindow,
 };
 
 use crate::{
+    auto_anim::{AnimRange, AnimSet, AutoAnim, AutoAnimPlugin},
     get_sprite_rotation,
     physics::Velocity,
     sprite_material::create_plane_mesh,
-    GameStuff, GameSet, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim},
+    GameSet, GameStuff,
 };
 
 const DOG_PATH: &str = "test/dog.png";
@@ -49,8 +51,14 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
-            .add_systems(Update, (change_movement_style, bark).in_set(GameSet::Playing))
-            .add_systems(Update, (set_cam_distance, camera_movement, stamina_increse).in_set(GameSet::Playing))
+            .add_systems(
+                Update,
+                (change_movement_style, bark).in_set(GameSet::Playing),
+            )
+            .add_systems(
+                Update,
+                (set_cam_distance, camera_movement, stamina_increse).in_set(GameSet::Playing),
+            )
             .add_plugins(AutoAnimPlugin::<PlayerAnim>::default())
             .add_systems(Update, set_anim_state.in_set(GameSet::Playing));
     }
@@ -59,7 +67,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Component)]
 pub struct Stamina {
     pub value: f32,
-    pub blocked: bool
+    pub blocked: bool,
 }
 
 fn change_movement_style(
@@ -76,12 +84,9 @@ fn change_movement_style(
     }
 }
 
-fn stamina_increse(
-    mut stamina_query: Query<&mut Stamina>,
-    time: Res<Time>,
-) {
+fn stamina_increse(mut stamina_query: Query<&mut Stamina>, time: Res<Time>) {
     for mut stamina in &mut stamina_query {
-        stamina.value += STAMINA_INCREASE * time.delta_seconds();
+        stamina.value += STAMINA_INCREASE * time.delta_secs();
         if stamina.value > 1.0 {
             stamina.value = 1.0;
             stamina.blocked = false;
@@ -96,7 +101,7 @@ pub enum PlayerAnim {
     WalkAndBark,
     Walk,
     #[default]
-    Idle
+    Idle,
 }
 
 impl AnimSet for PlayerAnim {
@@ -108,7 +113,7 @@ impl AnimSet for PlayerAnim {
         match self {
             PlayerAnim::BigBark => AnimRange::new(0, 2),
             PlayerAnim::Bark => AnimRange::new(3, 5),
-            PlayerAnim::WalkAndBark => AnimRange::new(6,7),
+            PlayerAnim::WalkAndBark => AnimRange::new(6, 7),
             PlayerAnim::Walk => AnimRange::new(9, 11),
             PlayerAnim::Idle => AnimRange::new(12, 15),
         }
@@ -160,65 +165,58 @@ fn spawn_player_by_event(
 ) {
     for event in event_reader.read() {
         let plane = meshes.add(create_plane_mesh());
-        let material = materials.add(
-            StandardMaterial {
-                base_color_texture: Some(asset_server.load(DOG_PATH)),
-                alpha_mode: AlphaMode::Opaque,
-                ..default()
-            });
+        let material = materials.add(StandardMaterial {
+            base_color_texture: Some(asset_server.load(DOG_PATH)),
+            alpha_mode: AlphaMode::Opaque,
+            ..default()
+        });
 
         info!("Spawn player at {:?}", event.position);
 
-        commands.spawn((
-            PbrBundle {
-                mesh: plane.clone(),
-                material: material.clone(),
-                transform: Transform::from_translation(event.position)
+        commands
+            .spawn((
+                Mesh3d(plane.clone()),
+                MeshMaterial3d(material.clone()),
+                Transform::from_translation(event.position)
                     .with_rotation(get_sprite_rotation())
                     .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
-                ..default()
-            },
-            Player,
-            Dog,
-            Velocity::default(),
-            GameStuff,
-            Stamina {
-                value: 1.0,
-                blocked: false
-            },
-            AutoAnim {
-                set: PlayerAnim::Idle,
-                timer: Timer::from_seconds(0.1, TimerMode::Repeating),
-                current_frame: 0,
-            }
-        )).with_children(|parent| {
-            parent.spawn((
-                DogBarkSource,
-                AudioBundle {
-                    source: asset_server.load(BARK_PATH),
-                    settings: PlaybackSettings {
+                Player,
+                Dog,
+                Velocity::default(),
+                GameStuff,
+                Stamina {
+                    value: 1.0,
+                    blocked: false,
+                },
+                AutoAnim {
+                    set: PlayerAnim::Idle,
+                    timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+                    current_frame: 0,
+                },
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    DogBarkSource,
+                    AudioPlayer::<AudioSource>(asset_server.load(BARK_PATH)),
+                    PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
                         volume: Volume::new(0.5),
                         ..default()
-                    }
-                },
-                SpatialBundle::default(),
-            ));
+                    },
+                ));
 
-            parent.spawn((
-                FootstepsSource,
-                AudioBundle {
-                    source: asset_server.load(DOG_RUN_PATH),
-                    settings: PlaybackSettings {
+                parent.spawn((
+                    FootstepsSource,
+                    AudioPlayer::<AudioSource>(asset_server.load(DOG_RUN_PATH)),
+                    PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
                         volume: Volume::new(2.0),
                         ..default()
-                    }
-                }
-            ));
-        });
+                    },
+                ));
+            });
     }
 
     commands.insert_resource(DogSounds {
@@ -253,12 +251,15 @@ fn player_movemnt_by_mouse(
         return;
     };
 
-    let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
+    let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
         // if it was impossible to compute for whatever reason; we can't do anything
         return;
     };
 
-    let Some(distance) = ray.intersect_plane(Vec3::Y * transform.translation.y, InfinitePlane3d::new(Vec3::Y)) else {
+    let Some(distance) = ray.intersect_plane(
+        Vec3::Y * transform.translation.y,
+        InfinitePlane3d::new(Vec3::Y),
+    ) else {
         return;
     };
 
@@ -268,13 +269,13 @@ fn player_movemnt_by_mouse(
     }
 
     if use_stamina {
-        stamine.value -= time.delta_seconds() * STAMINA_DECREASE;
+        stamine.value -= time.delta_secs() * STAMINA_DECREASE;
         if stamine.value < 0.0 {
             stamine.blocked = true;
         }
     }
 
-    let speed_k = if use_stamina { 1.0 } else {RUN_K};
+    let speed_k = if use_stamina { 1.0 } else { RUN_K };
 
     let globel_cursor = ray.get_point(distance);
 
@@ -288,7 +289,7 @@ fn player_movemnt_by_mouse(
 
     let dspeed = target_speed - vel.0;
 
-    vel.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
+    vel.0 += dspeed.normalize_or_zero() * accel * time.delta_secs();
 
     vel.0 = vel.0.clamp_length_max(speed);
 
@@ -303,9 +304,9 @@ pub fn bark(
     player_query: Query<&Transform, With<Player>>,
     input: Res<ButtonInput<KeyCode>>,
     mut event_writer: EventWriter<Bark>,
-    mut stamina : Query<&mut Stamina>,
-    time : Res<Time>,
-    bark_sink : Query<&AudioSink, With<DogBarkSource>>,
+    mut stamina: Query<&mut Stamina>,
+    time: Res<Time>,
+    bark_sink: Query<&AudioSink, With<DogBarkSource>>,
 ) {
     let Ok(bark) = player_query.get_single() else {
         return;
@@ -321,7 +322,7 @@ pub fn bark(
 
     if input.pressed(KeyCode::ControlLeft) && !stamina.blocked {
         radius *= 1.5;
-        stamina.value -= STAMINA_DECREASE * 3.0 * time.delta_seconds();
+        stamina.value -= STAMINA_DECREASE * 3.0 * time.delta_secs();
 
         if stamina.value < 0.0 {
             stamina.blocked = true;
@@ -361,7 +362,7 @@ fn player_movemnt_by_wasd(
     mut player_query: Query<(&mut Velocity, &mut Stamina), With<Player>>,
     input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>
+    mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>,
 ) {
     let Ok((mut player, mut stamina)) = player_query.get_single_mut() else {
         return;
@@ -399,7 +400,7 @@ fn player_movemnt_by_wasd(
     }
 
     if use_stamina {
-        stamina.value -= time.delta_seconds() * STAMINA_DECREASE;
+        stamina.value -= time.delta_secs() * STAMINA_DECREASE;
         if stamina.value < 0.0 {
             stamina.blocked = true;
         }
@@ -419,7 +420,7 @@ fn player_movemnt_by_wasd(
 
     let accel = accel.min(dspeed.length() * 100.0);
 
-    player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
+    player.0 += dspeed.normalize_or_zero() * accel * time.delta_secs();
 
     player.0 = player.0.clamp_length_max(speed);
 
@@ -467,7 +468,7 @@ fn camera_movement(
     let next_cam_pos = player.translation - cam_frw * distance.0;
 
     let dp = next_cam_pos - camera.translation;
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
 
     camera.translation += dp * dt * 1.5 * (150.0 / distance.0);
 }
@@ -492,8 +493,8 @@ fn set_cam_distance(
 }
 
 fn set_anim_state(
-    mut player : Query<(&mut AutoAnim<PlayerAnim>, &Velocity, &mut Transform)>,
-    input: Res<ButtonInput<KeyCode>>
+    mut player: Query<(&mut AutoAnim<PlayerAnim>, &Velocity, &mut Transform)>,
+    input: Res<ButtonInput<KeyCode>>,
 ) {
     let Ok((mut player, vel, mut t)) = player.get_single_mut() else {
         return;

@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
+    auto_anim::{AnimRange, AnimSet, AutoAnim, AutoAnimPlugin},
     get_sprite_rotation,
     global_task::sheep_escape::ShawshankRedemption,
     physics::{Velocity, WalkController},
@@ -11,7 +12,7 @@ use crate::{
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
-    GameSet, GameStuff, auto_anim::{AnimRange, AnimSet, AutoAnimPlugin, AutoAnim},
+    GameSet, GameStuff,
 };
 
 use bevy_spatial::{
@@ -78,9 +79,7 @@ impl Plugin for SheepPlugin {
         )
         .add_systems(Update, collect_field)
         .add_plugins(AutoAnimPlugin::<SheepAnim>::default())
-        
         .add_systems(Update, set_anim_state.in_set(GameSet::Playing))
-        
         .add_systems(Update, update_nearest);
     }
 }
@@ -90,7 +89,7 @@ pub enum SheepAnim {
     #[default]
     Idle,
     Walk,
-    Feed
+    Feed,
 }
 
 impl AnimSet for SheepAnim {
@@ -193,7 +192,10 @@ impl StateChance {
 pub fn scared_sheeps(
     mut commands: Commands,
     mut event_reader: EventReader<Bark>,
-    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision), (With<Sheep>, Without<IsScared>)>,
+    mut sheeps: Query<
+        (Entity, &Transform, &mut SheepTargetVel, &mut Decision),
+        (With<Sheep>, Without<IsScared>),
+    >,
 ) {
     if let Some(bark) = event_reader.read().next() {
         let bark_origin = bark.position;
@@ -384,7 +386,7 @@ pub fn update_scared_sheeps(
             &mut SheepTargetVel,
             &mut Decision,
             &mut IsScared,
-            &NearestSheep
+            &NearestSheep,
         ),
         With<Sheep>,
     >,
@@ -400,7 +402,7 @@ pub fn update_scared_sheeps(
             walk.0 = Vec3::ZERO;
             commands.entity(e).remove::<IsScared>();
         } else {
-            scare.time += time.delta_seconds();
+            scare.time += time.delta_secs();
 
             let dog_dpos = t.translation - dog_transform.translation;
             let dog_distance = dog_dpos.length();
@@ -416,28 +418,30 @@ pub fn update_scared_sheeps(
             let mut count = 0.0;
             for (pos, _) in nearest.iter().skip(1) {
                 // if (*pos - t.translation).length() < 5.0 {
-                    let ddog = *pos - dog_transform.translation;
-                    if ddog.dot(dog_dpos) >= 0.0 {
-                        mean_nearest_sheep += *pos;
-                        count += 1.0;
-                    }
+                let ddog = *pos - dog_transform.translation;
+                if ddog.dot(dog_dpos) >= 0.0 {
+                    mean_nearest_sheep += *pos;
+                    count += 1.0;
+                }
                 // }
             }
             if count > 0.0 {
                 let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
                 if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() {
-                    walk.0 = (mean_nearest_sheep - dog_transform.translation).normalize_or_zero() * speed_amount;
+                    walk.0 = (mean_nearest_sheep - dog_transform.translation).normalize_or_zero()
+                        * speed_amount;
                     scare.last_vel = walk.0;
                 } else {
-                    walk.0 = ((mean_nearest_sheep - dog_transform.translation).normalize_or_zero() + (mean_nearest_sheep - t.translation).normalize_or_zero() * 1.5).normalize_or_zero()
-                                 * speed_amount;
+                    walk.0 = ((mean_nearest_sheep - dog_transform.translation).normalize_or_zero()
+                        + (mean_nearest_sheep - t.translation).normalize_or_zero() * 1.5)
+                        .normalize_or_zero()
+                        * speed_amount;
                     scare.last_vel = walk.0;
                 }
             } else {
                 walk.0 = dir * speed_amount;
                 scare.last_vel = walk.0;
             }
-            
         }
     }
 }
@@ -476,14 +480,11 @@ pub fn setup(
         }
 
         commands.spawn((
-            MaterialMeshBundle {
-                mesh: square.clone(),
-                material: sheep_material.clone(),
-                transform: Transform::from_xyz(pos.x, pos.y, pos.z)
-                    .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
-                ..default()
-            },
+            Mesh3d(square.clone()),
+            MeshMaterial3d(sheep_material.clone()),
+            Transform::from_xyz(pos.x, pos.y, pos.z)
+                .with_rotation(get_sprite_rotation())
+                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
             Sheep::default(),
             Decision::Idle,
             Velocity::default(),
@@ -497,9 +498,9 @@ pub fn setup(
             AutoAnim {
                 set: SheepAnim::Idle,
                 timer: Timer::from_seconds(0.1 + rng.gen_range(-0.01..=0.01), TimerMode::Repeating),
-                current_frame: 0
+                current_frame: 0,
             },
-            NearestSheep::default()
+            NearestSheep::default(),
         ));
         exact_sheep_count += 1;
     }
@@ -518,7 +519,7 @@ fn idle_feeding_system(
     time: Res<Time>,
 ) {
     for (e, mut dec, mut idle) in sheeps.iter_mut() {
-        idle.time -= time.delta_seconds();
+        idle.time -= time.delta_secs();
         if idle.time < 0.0 {
             *dec = Decision::Idle;
             commands.entity(e).remove::<IdleFeeding>();
@@ -539,8 +540,8 @@ pub struct UpdatedSheep;
 
 fn update_nearest(
     mut commands: Commands,
-    mut sheep : Query<(Entity, &Transform, &mut NearestSheep), (With<Sheep>, Without<UpdatedSheep>)>,
-    mut updated_sheep : Query<Entity, With<UpdatedSheep>>,
+    mut sheep: Query<(Entity, &Transform, &mut NearestSheep), (With<Sheep>, Without<UpdatedSheep>)>,
+    mut updated_sheep: Query<Entity, With<UpdatedSheep>>,
     field: ResMut<NNTree>,
 ) {
     let max_sheep_count = 100;
@@ -570,7 +571,7 @@ fn collect_field(
             &mut WalkController,
             &Velocity,
             &Decision,
-            &NearestSheep
+            &NearestSheep,
         ),
         With<Sheep>,
     >,
@@ -632,7 +633,15 @@ fn collect_field(
 }
 
 fn set_anim_state(
-    mut sheep : Query<(&mut AutoAnim<SheepAnim>, Option<&GoTo>, Option<&IdleFeeding>, Option<&IsScared>), With<Sheep>>
+    mut sheep: Query<
+        (
+            &mut AutoAnim<SheepAnim>,
+            Option<&GoTo>,
+            Option<&IdleFeeding>,
+            Option<&IsScared>,
+        ),
+        With<Sheep>,
+    >,
 ) {
     for (mut anim, go_to, idle, scared) in sheep.iter_mut() {
         if go_to.is_some() {

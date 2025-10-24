@@ -1,4 +1,4 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, color::Srgba};
+use bevy::{color::Srgba, pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
@@ -93,36 +93,34 @@ pub fn setup(
         }
 
         commands
-            .spawn(MaterialMeshBundle {
-                mesh: square.clone(),
-                material: tree_material.clone(),
-                transform: Transform::from_xyz(pos.x, pos.y, pos.z)
+            .spawn((
+                Mesh3d(square.clone()),
+                MeshMaterial3d(tree_material.clone()),
+                Transform::from_xyz(pos.x, pos.y, pos.z)
                     .with_rotation(get_sprite_rotation())
                     .with_scale(Vec3::new(2.5, 2.6, 5.0) * 2.0),
-                ..default()
-            })
-            .insert(GameStuff);
+                GameStuff,
+            ));
     }
 
     //green plane
     commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0)),
-            material: materials.add(StandardMaterial {
+        .spawn((
+            Mesh3d(meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0))),
+            MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: Srgba::hex("5d9669").unwrap().into(),
                 reflectance: 0.05,
                 ..default()
-            }),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
+            })),
+            Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
                 EulerRot::XYZ,
                 -PI / 2.0,
                 0.0,
                 0.0,
             )),
-            ..default()
-        })
-        .insert(GameStuff)
-        .insert(Name::new("Green Plane"));
+            GameStuff,
+            Name::new("Green Plane"),
+        ));
 
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),

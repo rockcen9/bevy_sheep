@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    auto_anim::{AnimRange, AnimSet, AutoAnim, AutoAnimPlugin},
     common_storage::CommonStorage,
     get_sprite_rotation,
     global_task::torch_blinking::TorchDelight,
@@ -8,7 +9,7 @@ use crate::{
     player::{Bark, DOG_ACCELERATION, DOG_SPEED},
     sunday::DayState,
     torch::{IgniteTorch, TorchBase},
-    GameSet, GameStuff, auto_anim::{AutoAnimPlugin, AutoAnim, AnimSet, AnimRange},
+    GameSet, GameStuff,
 };
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
@@ -25,7 +26,13 @@ impl Plugin for ShepherdPlugin {
         app.add_event::<SpawnShepherd>()
             .add_systems(
                 Update,
-                (spawn_shepherd_system, ignite_all_torhes, bark_system, set_anim).in_set(GameSet::Playing),
+                (
+                    spawn_shepherd_system,
+                    ignite_all_torhes,
+                    bark_system,
+                    set_anim,
+                )
+                    .in_set(GameSet::Playing),
             )
             .add_systems(OnEnter(DayState::Evening), start_ignite_torches)
             .add_plugins(AutoAnimPlugin::<ShepherdAnim>::default());
@@ -36,7 +43,7 @@ impl Plugin for ShepherdPlugin {
 pub enum ShepherdAnim {
     #[default]
     Sleep,
-    Walk
+    Walk,
 }
 
 impl AnimSet for ShepherdAnim {
@@ -47,7 +54,7 @@ impl AnimSet for ShepherdAnim {
     fn get_index_range(&self) -> crate::auto_anim::AnimRange {
         match self {
             ShepherdAnim::Sleep => AnimRange::new(0, 19),
-            ShepherdAnim::Walk => AnimRange::new(20,27),
+            ShepherdAnim::Walk => AnimRange::new(20, 27),
         }
     }
 
@@ -122,17 +129,14 @@ fn spawn_shepherd_system(
     for event in events.read() {
         commands.spawn((
             Shepherd::default(),
-            PbrBundle {
-                transform: Transform::from_translation(event.pos)
-                    .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(3.0, 3.0, 3.0)),
-                material: materials.add(StandardMaterial {
-                    base_color_texture: Some(asset_server.load(SHEPHERD_PATH)),
-                    ..default()
-                }),
-                mesh: common_storage.plane.clone(),
+            Mesh3d(common_storage.plane.clone()),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color_texture: Some(asset_server.load(SHEPHERD_PATH)),
                 ..default()
-            },
+            })),
+            Transform::from_translation(event.pos)
+                .with_rotation(get_sprite_rotation())
+                .with_scale(Vec3::new(3.0, 3.0, 3.0)),
             Velocity::default(),
             WalkController {
                 max_speed: SHEPHERD_SPEED,
@@ -141,10 +145,10 @@ fn spawn_shepherd_system(
             },
             GameStuff,
             AutoAnim {
-                set : ShepherdAnim::Sleep,
+                set: ShepherdAnim::Sleep,
                 current_frame: 0,
-                timer: Timer::from_seconds(0.1, TimerMode::Repeating)
-            }
+                timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+            },
         ));
     }
     events.clear();
@@ -166,9 +170,7 @@ fn bark_system(
     }
 }
 
-fn set_anim(
-    mut query : Query<(&mut AutoAnim<ShepherdAnim>, Option<&IgniteAllTorhes>)>
-) {
+fn set_anim(mut query: Query<(&mut AutoAnim<ShepherdAnim>, Option<&IgniteAllTorhes>)>) {
     for (mut anim, ignite) in query.iter_mut() {
         if ignite.is_some() {
             anim.set = ShepherdAnim::Walk;

@@ -22,7 +22,7 @@ pub struct Velocity(pub Vec3);
 
 fn apply_velocity(mut query: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {
     for (velocity, mut transform) in query.iter_mut() {
-        transform.translation += velocity.0 * time.delta_seconds();
+        transform.translation += velocity.0 * time.delta_secs();
     }
 }
 
@@ -39,7 +39,7 @@ fn walk_system(time: Res<Time>, mut query: Query<(&mut Velocity, &mut WalkContro
         let accel = controller.acceleration.min(dspeed.length() * 100.0);
         let cur_vel = velocity.0;
         velocity.0 +=
-            (dspeed.normalize_or_zero() * accel - cur_vel * AIR_RESISTANCE) * time.delta_seconds();
+            (dspeed.normalize_or_zero() * accel - cur_vel * AIR_RESISTANCE) * time.delta_secs();
         velocity.0 = velocity.0.clamp_length_max(controller.max_speed);
     }
 }

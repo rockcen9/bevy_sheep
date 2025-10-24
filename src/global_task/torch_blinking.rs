@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::hashbrown::HashSet, color::palettes::css};
+use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashSet};
 use rand::Rng;
 
 use crate::{
@@ -52,7 +52,7 @@ fn start_fire_problems(
     mut commands: Commands,
     torches: Query<(Entity, &SafeArea), With<TorchBase>>,
     episode_time: Res<EpisodeTime>,
-    sheep: Query<(Entity,&Transform), With<Sheep>>,
+    sheep: Query<(Entity, &Transform), With<Sheep>>,
     mut global_task: ResMut<NextState<GlobalTask>>,
 ) {
     let torch_count = torches.iter().count();
@@ -92,7 +92,7 @@ fn start_fire_problems(
         problem_torches.remove(i);
     }
 
-    let mut sheep_in_torches : HashSet<Entity> = HashSet::new();
+    let mut sheep_in_torches: HashSet<Entity> = HashSet::new();
 
     for (idx, (e, safe_area, count, set)) in problem_torches.iter().enumerate() {
         commands.entity(*e).insert(TorchDelight {
@@ -128,7 +128,7 @@ fn update_delight_system(
     sheep: Query<&Sheep>,
 ) {
     if !status.torches_to_lit.is_empty() {
-        status.time_for_mission -= time.delta_seconds();
+        status.time_for_mission -= time.delta_secs();
         if status.time_for_mission < 0.0 {
             gamestate.set(GameState::Finish);
             commands.insert_resource(FailReason::TaskFailed(format!(
@@ -149,7 +149,7 @@ fn update_delight_system(
         if ok_torches == status.torches_to_lit.len() {
             global_task.set(GlobalTask::None);
             if let Ok(mut text) = texts.get_single_mut() {
-                text.sections[0].value = format!("");
+                text.0 = format!("");
             }
             return;
         } else {
@@ -164,7 +164,7 @@ fn update_delight_system(
         }
 
         if let Ok(mut text) = texts.get_single_mut() {
-            text.sections[0].value = format!("The torches are going out! Wake up the shepherd so he can light them! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
+            text.0 = format!("The torches are going out! Wake up the shepherd so he can light them! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
         }
     }
 }
@@ -176,7 +176,7 @@ fn delight(
     time: Res<Time>,
 ) {
     for (e, tr, mut delight, mut base) in &mut torches {
-        delight.be_scared_time -= time.delta_seconds();
+        delight.be_scared_time -= time.delta_secs();
         if delight.be_scared_time > 0.0 {
             if let Ok(mut light) = lights.get_mut(base.light) {
                 light.color = css::ORANGE_RED.into();
@@ -184,7 +184,7 @@ fn delight(
             continue;
         }
 
-        delight.rest_time -= time.delta_seconds();
+        delight.rest_time -= time.delta_secs();
 
         if delight.rest_time < 0.0 {
             if let Ok(mut light) = lights.get_mut(base.light) {

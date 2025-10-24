@@ -1,9 +1,9 @@
+pub mod change_safe_area_size;
 pub mod collect_sheep_in_area;
+pub mod evening_warning;
 pub mod sheep_escape;
 pub mod torch_blinking;
 pub mod wolf_attack;
-pub mod change_safe_area_size;
-pub mod evening_warning;
 
 use bevy::prelude::*;
 

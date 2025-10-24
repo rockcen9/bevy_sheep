@@ -1,4 +1,4 @@
-use bevy::{prelude::*, color::palettes::css};
+use bevy::{color::palettes::css, prelude::*};
 
 use crate::{GameSet, GameState};
 
@@ -16,35 +16,35 @@ impl Plugin for MenuPlugin {
 pub struct MainMenu;
 
 fn setup_main_menu(mut commands: Commands) {
-    let mut text_style = TextStyle::default();
-    text_style.font_size = 24.0;
+    let text_font = TextFont {
+        font_size: 24.0,
+        ..default()
+    };
     commands
         .spawn((
             MainMenu,
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.),
-                    height: Val::Percent(100.),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.),
+                height: Val::Percent(100.),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
                 ..default()
             },
         ))
         .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "You're a shepherd's dog. Your master is a vampire. Don't ask why, you're just a dog. \n
+            parent.spawn((
+                Text::new("You're a shepherd's dog. Your master is a vampire. Don't ask why, you're just a dog. \n
 Don't let the sheep flock run away and get eaten by wolves. Complete your master's tasks. \n
 If you fail, you'll be replaced. Or whatever your bloodhungry master deems to think will be justified punishment. So... Be a good dog. \n
-Good luck!\n",
-                TextStyle::default(),
+Good luck!\n"),
+                TextFont::default(),
             ));
 
             parent
-                .spawn(ButtonBundle {
-                    style: Style {
+                .spawn((
+                    Button,
+                    Node {
                         width: Val::Px(100.0),
                         height: Val::Px(50.0),
                         border: UiRect::all(Val::Px(5.0)),
@@ -52,12 +52,14 @@ Good luck!\n",
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    border_color: BorderColor(Color::WHITE),
-                    background_color: BackgroundColor(Color::BLACK),
-                    ..default()
-                })
+                    BorderColor(Color::WHITE),
+                    BackgroundColor(Color::BLACK),
+                ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section("Start", text_style.clone()));
+                    parent.spawn((
+                        Text::new("Start"),
+                        text_font.clone(),
+                    ));
                 });
         });
 }

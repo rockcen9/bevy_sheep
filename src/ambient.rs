@@ -1,4 +1,4 @@
-use bevy::{prelude::*, audio::PlaybackMode};
+use bevy::{audio::PlaybackMode, prelude::*};
 
 pub struct AmbientPlugin;
 
@@ -7,40 +7,32 @@ pub struct ForestAmbient;
 
 impl Plugin for AmbientPlugin {
     fn build(&self, app: &mut App) {
-        app.
-            add_systems(Startup, startup);
+        app.add_systems(Startup, startup);
     }
 }
 
-fn startup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
-    commands.spawn(AudioBundle {
-        source: asset_server.load("audio/forest.ogg"),
-        settings: PlaybackSettings {
+fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        AudioPlayer::<AudioSource>(asset_server.load("audio/forest.ogg")),
+        PlaybackSettings {
             mode: PlaybackMode::Loop,
             ..Default::default()
         },
-        ..default()
-    });
+    ));
 
-    commands.spawn(AudioBundle {
-        source: asset_server.load("audio/main-theme.ogg"),
-        settings: PlaybackSettings {
+    commands.spawn((
+        AudioPlayer::<AudioSource>(asset_server.load("audio/main-theme.ogg")),
+        PlaybackSettings {
             mode: PlaybackMode::Loop,
             ..Default::default()
         },
-        ..default()
-    });
+    ));
 
-    commands.spawn(AudioBundle {
-        source: asset_server.load("audio/sheep.ogg"),
-        settings: PlaybackSettings {
+    commands.spawn((
+        AudioPlayer::<AudioSource>(asset_server.load("audio/sheep.ogg")),
+        PlaybackSettings {
             mode: PlaybackMode::Loop,
             ..Default::default()
         },
-        ..default()
-    });
+    ));
 }
-

@@ -19,12 +19,12 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, -100.0)
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 0.0, -100.0)
             .looking_at(Vec3::ZERO, Vec3::Y)
             .with_translation(Vec3::new(0.0, -10.0, -150.0)),
-        ..default()
-    });
+    ));
 
     //green plane
     commands.spawn(PbrBundle {

@@ -1,14 +1,16 @@
-use bevy::{prelude::*, audio::Volume};
+use bevy::{audio::Volume, prelude::*};
 use rand::Rng;
 
 use crate::{
+    auto_anim::{AnimRange, AnimSet, AutoAnim, AutoAnimPlugin},
     common_storage::CommonStorage,
+    corpse::SpawnCorpse,
     get_sprite_rotation,
     physics::{Velocity, WalkController},
     player::{Bark, DOG_SPEED},
     safe_area::{OutOfSafeArea, SafeArea},
     test_level::LevelSize,
-    GameStuff, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim}, corpse::SpawnCorpse,
+    GameStuff,
 };
 
 const WOLF_SPEED: f32 = DOG_SPEED * 1.3;
@@ -18,23 +20,25 @@ pub struct WolfPlugin;
 
 impl Plugin for WolfPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_wolf_material).add_systems(
-            Update,
-            (
-                apply_deferred,
-                wolf_spawner,
-                catch_system,
-                apply_deferred,
-                eating_system,
-                apply_deferred,
-                go_out_system,
-                apply_deferred,
-                run_out_system,
-                bark,
-                apply_deferred,
+        app.add_systems(Startup, setup_wolf_material)
+            .add_systems(
+                Update,
+                (
+                    apply_deferred,
+                    wolf_spawner,
+                    catch_system,
+                    apply_deferred,
+                    eating_system,
+                    apply_deferred,
+                    go_out_system,
+                    apply_deferred,
+                    run_out_system,
+                    bark,
+                    apply_deferred,
+                )
+                    .chain(),
             )
-                .chain(),
-        ).add_plugins(AutoAnimPlugin::<WolfAnim>::default());
+            .add_plugins(AutoAnimPlugin::<WolfAnim>::default());
     }
 }
 
@@ -42,7 +46,7 @@ impl Plugin for WolfPlugin {
 pub enum WolfAnim {
     Eat,
     #[default]
-    Run
+    Run,
 }
 
 impl AnimSet for WolfAnim {
@@ -68,7 +72,7 @@ pub struct Wolf;
 #[derive(Component)]
 pub struct TryToCatchSheep {
     pub target: Entity,
-    pub ignore_safe : bool
+    pub ignore_safe: bool,
 }
 
 #[derive(Component)]
@@ -107,24 +111,28 @@ fn wolf_spawner(
     level_size: Res<LevelSize>,
     common_storage: Res<CommonStorage>,
     wolf_storage: Res<WolfStorage>,
-    wolfs : Query<(), With<Wolf>>,
-    safe_areas : Query<&SafeArea>,
+    wolfs: Query<(), With<Wolf>>,
+    safe_areas: Query<&SafeArea>,
 ) {
     let num_wolfs = wolfs.iter().count();
     if num_wolfs > 20 {
         return;
     }
     for (sheep_entity, sheep_transform) in sheep.iter() {
-
         let start_pos = sheep_transform.translation.normalize() * level_size.0 * 2.0;
         let dir = (sheep_transform.translation - start_pos).normalize();
         let t_to_ship = (sheep_transform.translation - start_pos).length();
         let mut has_cross_to_safe = false;
         for safe_area in safe_areas.iter() {
             if let SafeArea::Circle { pos, radius } = safe_area {
-                let t = (-start_pos.x * dir.x - start_pos.y * dir.y + pos.x * dir.x + pos.y * dir.y) / (dir.x * dir.x + dir.y * dir.y);
+                let t =
+                    (-start_pos.x * dir.x - start_pos.y * dir.y + pos.x * dir.x + pos.y * dir.y)
+                        / (dir.x * dir.x + dir.y * dir.y);
                 let nearest_pos = start_pos + dir * t;
-                if (Vec2::new(nearest_pos.x, nearest_pos.z) - *pos).length() < *radius && t > 0.0 && t < t_to_ship {
+                if (Vec2::new(nearest_pos.x, nearest_pos.z) - *pos).length() < *radius
+                    && t > 0.0
+                    && t < t_to_ship
+                {
                     has_cross_to_safe = true;
                     break;
                 }
@@ -137,19 +145,16 @@ fn wolf_spawner(
 
         commands.spawn((
             Wolf,
-            PbrBundle {
-                mesh: common_storage.plane.clone(),
-                material: wolf_storage.material.clone(),
-                transform: Transform::from_translation(
-                    sheep_transform.translation.normalize() * level_size.0 * 2.0,
-                )
-                .with_rotation(get_sprite_rotation())
-                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
-                ..default()
-            },
+            Mesh3d(common_storage.plane.clone()),
+            MeshMaterial3d(wolf_storage.material.clone()),
+            Transform::from_translation(
+                sheep_transform.translation.normalize() * level_size.0 * 2.0,
+            )
+            .with_rotation(get_sprite_rotation())
+            .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
             TryToCatchSheep {
                 target: sheep_entity,
-                ignore_safe : false
+                ignore_safe: false,
             },
             Velocity::default(),
             WalkController {
@@ -161,8 +166,11 @@ fn wolf_spawner(
             AutoAnim {
                 set: WolfAnim::Run,
                 current_frame: 0,
-                timer: Timer::from_seconds(0.1 + rand::thread_rng().gen_range(-0.01..=0.01), TimerMode::Repeating),
-            }
+                timer: Timer::from_seconds(
+                    0.1 + rand::thread_rng().gen_range(-0.01..=0.01),
+                    TimerMode::Repeating,
+                ),
+            },
         ));
 
         commands.entity(sheep_entity).insert(UnderHunting);
@@ -176,9 +184,9 @@ fn catch_system(
     mut commands: Commands,
     sheep: Query<&Transform>,
     mut wolfs: Query<(Entity, &Transform, &mut WalkController, &TryToCatchSheep)>,
-    asset_server : Res<AssetServer>,
-    mut spawn_corpse : EventWriter<SpawnCorpse>,
-    sheep_dying : Query<(), With<SheepDying>>
+    asset_server: Res<AssetServer>,
+    mut spawn_corpse: EventWriter<SpawnCorpse>,
+    sheep_dying: Query<(), With<SheepDying>>,
 ) {
     let mut sheep_dying_count = sheep_dying.iter().count();
     for (wolf, wolf_transform, mut walk_controller, try_to_catch_sheep) in wolfs.iter_mut() {
@@ -199,18 +207,21 @@ fn catch_system(
                     .entity(try_to_catch_sheep.target)
                     .despawn_recursive();
 
-                spawn_corpse.send(SpawnCorpse { position: sheep.translation });
+                spawn_corpse.send(SpawnCorpse {
+                    position: sheep.translation,
+                });
 
                 if sheep_dying_count < 3 {
-                    commands.spawn(AudioBundle {
-                        source: asset_server.load("audio/kill_sound.ogg"),
-                        settings: PlaybackSettings {
+                    commands.spawn((
+                        AudioPlayer::<AudioSource>(asset_server.load("audio/kill_sound.ogg")),
+                        PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
                             volume: Volume::new(0.7),
                             spatial: true,
                             ..default()
                         },
-                    }).insert(SheepDying);
+                        SheepDying,
+                    ));
                     sheep_dying_count += 3;
                 }
             } else {
@@ -231,10 +242,10 @@ fn eating_system(
     unhunted_sheep: Query<(Entity, &Transform), (With<OutOfSafeArea>, Without<UnderHunting>)>,
 ) {
     for (wolf, wolf_transform, mut eating, mut walk_controller) in wolfs.iter_mut() {
-        eating.time -= time.delta_seconds();
+        eating.time -= time.delta_secs();
         if eating.time <= 0.0 {
             //test if we can eat more
-            let mut nearest : Option<(Entity, f32)> = None;
+            let mut nearest: Option<(Entity, f32)> = None;
             for (sheep_e, sheep_transform) in unhunted_sheep.iter() {
                 let dist = (wolf_transform.translation - sheep_transform.translation).length();
                 if nearest.is_none() || dist < nearest.unwrap().1 {
@@ -243,14 +254,20 @@ fn eating_system(
             }
 
             if let Some((e, _)) = nearest {
-                commands.entity(wolf).remove::<Eating>().insert(TryToCatchSheep {
-                    target: e,
-                    ignore_safe: false
-                });
+                commands
+                    .entity(wolf)
+                    .remove::<Eating>()
+                    .insert(TryToCatchSheep {
+                        target: e,
+                        ignore_safe: false,
+                    });
 
                 commands.entity(e).insert(UnderHunting);
             } else {
-                commands.entity(wolf).remove::<Eating>().insert(GoOut)
+                commands
+                    .entity(wolf)
+                    .remove::<Eating>()
+                    .insert(GoOut)
                     .insert(AutoAnim {
                         set: WolfAnim::Run,
                         current_frame: 0,
@@ -282,7 +299,10 @@ fn go_out_system(
                 y: wolf_transform.translation.z,
             })
         }) {
-            commands.entity(wolf).insert(GoOut).remove::<Eating>()
+            commands
+                .entity(wolf)
+                .insert(GoOut)
+                .remove::<Eating>()
                 .insert(AutoAnim {
                     set: WolfAnim::Run,
                     current_frame: 0,

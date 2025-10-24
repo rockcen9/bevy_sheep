@@ -69,7 +69,8 @@ fn check_wave_finish(
 
         if sheep_wave_status.start_count - alived_sheep > loose_limit {
             commands.insert_resource(FailReason::TaskFailed(
-                "Half the runway flock has been eaten. That's giving bad dog, don't you think?".to_string(),
+                "Half the runway flock has been eaten. That's giving bad dog, don't you think?"
+                    .to_string(),
             ));
             game_state.set(GameState::Finish);
             global_task.set(GlobalTask::None);
@@ -81,15 +82,15 @@ fn check_wave_finish(
         sheep_wave_status.sheep.clear();
 
         for mut t in info_texts.iter_mut() {
-            t.sections[0].value = "".to_string();
+            t.0 = "".to_string();
         }
     } else if next_wave.0.is_some() {
         for mut t in info_texts.iter_mut() {
-            t.sections[0].value = "Your flock is getting restless, wait for it".to_string();
+            t.0 = "Your flock is getting restless, wait for it".to_string();
         }
     } else if sheep_wave_status.start_count != 0 {
         for mut t in info_texts.iter_mut() {
-            t.sections[0].value = format!(
+            t.0 = format!(
                 "{} sheep are trying to escape! Stop them! Dont lose more than {}",
                 escapers.iter().count(),
                 loose_limit
@@ -106,7 +107,7 @@ fn generate_new_wave(
     episode_time: Res<EpisodeTime>,
     sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
 ) {
-    let level_time = time.elapsed_seconds() - teller.level_start_time;
+    let level_time = time.elapsed_secs() - teller.level_start_time;
 
     let episode_time = episode_time.0;
 
@@ -123,7 +124,7 @@ fn generate_new_wave(
         next_wave.0 = Some(SheepWave {
             count: c as usize,
             beams: n.round() as usize,
-            time: time.elapsed_seconds() + dt,
+            time: time.elapsed_secs() + dt,
         });
     } else if *day_state == DayState::Night {
         let sheep_count = sheep.iter().count() as f32;
@@ -134,7 +135,7 @@ fn generate_new_wave(
         next_wave.0 = Some(SheepWave {
             count: c as usize,
             beams: n.round() as usize,
-            time: time.elapsed_seconds() + dt,
+            time: time.elapsed_secs() + dt,
         });
     }
 
@@ -156,7 +157,7 @@ fn wave_executor(
 
     if next_wave.0.is_some() {
         let wave = next_wave.0.as_ref().unwrap().clone();
-        let cur_time = time.elapsed_seconds();
+        let cur_time = time.elapsed_secs();
         if wave.time <= cur_time {
             next_wave.0 = None;
             *sheep_wave_status = Default::default();

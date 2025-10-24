@@ -1,15 +1,28 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{storyteller::{Storyteller, GlobalTask}, safe_area::{SafeArea, LandSafeArea}, test_level::LevelSize, GameSet, level_ui::TaskText, GameStuff};
+use crate::{
+    level_ui::TaskText,
+    safe_area::{LandSafeArea, SafeArea},
+    storyteller::{GlobalTask, Storyteller},
+    test_level::LevelSize,
+    GameSet, GameStuff,
+};
 
 pub struct ChangeSafeAreaSizePlugin;
 
 impl Plugin for ChangeSafeAreaSizePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(GlobalTask::ChangeSafeArea), (start_change_safe_area, apply_deferred).chain())
-            .add_systems(Update, change_area_system.run_if(in_state(GlobalTask::ChangeSafeArea)).in_set(GameSet::Playing));
+            OnEnter(GlobalTask::ChangeSafeArea),
+            (start_change_safe_area, apply_deferred).chain(),
+        )
+        .add_systems(
+            Update,
+            change_area_system
+                .run_if(in_state(GlobalTask::ChangeSafeArea))
+                .in_set(GameSet::Playing),
+        );
     }
 }
 
@@ -18,28 +31,27 @@ pub struct ChangeSafeArea {
     pub target_scale: f32,
     pub start_scale: f32,
 
-    pub target_pos : Vec2,
-    pub start_pos : Vec2,
+    pub target_pos: Vec2,
+    pub start_pos: Vec2,
 
     pub duration: f32,
     pub time: f32,
 
-    pub start_area: SafeArea
+    pub start_area: SafeArea,
 }
 
 const CHANGE_DURATION: f32 = 60.0;
 
 fn start_change_safe_area(
     mut commands: Commands,
-    mut teller : ResMut<Storyteller>,
+    mut teller: ResMut<Storyteller>,
     mut areas: Query<(Entity, &mut SafeArea, &LandSafeArea)>,
-    leve_size : Res<LevelSize>
+    leve_size: Res<LevelSize>,
 ) {
     let mut rng = rand::thread_rng();
     let pos = rng.gen_range(8..=20) as f32;
 
     for (entity, mut area, land) in areas.iter_mut() {
-
         let start_pos = area.get_center();
         let start_pos = Vec2::new(start_pos.x, start_pos.z);
         let target_pos = Vec2::new(start_pos.x + pos, start_pos.y + pos);
@@ -54,22 +66,22 @@ fn start_change_safe_area(
             duration: CHANGE_DURATION,
             time: 0.0,
 
-            start_area: area.clone()
+            start_area: area.clone(),
         };
 
         commands.entity(entity).insert(change);
     }
 
     //generate circle area
-    let area = SafeArea::Circle { 
+    let area = SafeArea::Circle {
         pos: Vec2::new(-pos, -pos),
-        radius: leve_size.0 / 4.0
-     };
+        radius: leve_size.0 / 4.0,
+    };
 
-     commands.spawn((
+    commands.spawn((
         area.clone(),
         LandSafeArea {
-            start_area: area.clone()
+            start_area: area.clone(),
         },
         ChangeSafeArea {
             target_scale: 1.0,
@@ -81,33 +93,32 @@ fn start_change_safe_area(
             duration: CHANGE_DURATION,
             time: 0.0,
 
-            start_area: area
-        }
-     ));
+            start_area: area,
+        },
+    ));
 }
 
 fn change_area_system(
     mut commands: Commands,
     mut change: Query<(Entity, &mut ChangeSafeArea)>,
-    time : Res<Time>,
-    mut global_task : ResMut<NextState<GlobalTask>>,
-    mut text : Query<&mut Text, With<TaskText>>
+    time: Res<Time>,
+    mut global_task: ResMut<NextState<GlobalTask>>,
+    mut text: Query<&mut Text, With<TaskText>>,
 ) {
-
     if change.is_empty() {
         global_task.set(GlobalTask::None);
         for mut t in text.iter_mut() {
-            t.sections[0].value = "".to_string();
+            t.0 = "".to_string();
         }
         return;
     }
 
     for mut t in text.iter_mut() {
-        t.sections[0].value = "The wind has changed. Sheep safe zones are changing!".to_string();
+        t.0 = "The wind has changed. Sheep safe zones are changing!".to_string();
     }
 
     for (entity, mut change) in change.iter_mut() {
-        change.time += time.delta_seconds();
+        change.time += time.delta_secs();
 
         if change.time >= change.duration {
             commands.entity(entity).remove::<ChangeSafeArea>();
@@ -119,11 +130,10 @@ fn change_area_system(
             let mut area = change.start_area.get_scaled(scale);
             area.set_pos(pos);
 
-            commands.entity(entity)
+            commands
+                .entity(entity)
                 .insert(area.clone())
-                .insert(LandSafeArea {
-                    start_area: area
-                })
+                .insert(LandSafeArea { start_area: area })
                 .insert(GameStuff);
         }
     }

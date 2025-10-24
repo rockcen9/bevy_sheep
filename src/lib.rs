@@ -1,6 +1,9 @@
 #![allow(clippy::type_complexity)]
 
+pub mod ambient;
+pub mod auto_anim;
 pub mod common_storage;
+pub mod corpse;
 pub mod debug_diagnostic;
 pub mod finish_screen;
 pub mod global_task;
@@ -17,9 +20,6 @@ pub mod sunday;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
-pub mod ambient;
-pub mod auto_anim;
-pub mod corpse;
 
 use std::f32::consts::PI;
 
@@ -105,10 +105,7 @@ impl Plugin for GamePlugin {
             global_task::GlobalTaskPlugin,
         ));
 
-        app.add_plugins((
-            ambient::AmbientPlugin,
-            corpse::CorpsePlugin
-        ));
+        app.add_plugins((ambient::AmbientPlugin, corpse::CorpsePlugin));
 
         //For long term updates
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));
@@ -134,13 +131,11 @@ fn loading(mut next_state: ResMut<NextState<GameState>>) {
 
 fn camera_setup(mut commands: Commands) {
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-            camera: Camera {
-                hdr: true,
-                clear_color: ClearColorConfig::Custom(Color::BLACK),
-                ..default()
-            },
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Camera {
+            hdr: true,
+            clear_color: ClearColorConfig::Custom(Color::BLACK),
             ..default()
         },
     ));

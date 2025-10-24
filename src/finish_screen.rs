@@ -20,11 +20,14 @@ impl Plugin for FinishScreenPlugin {
 struct FinishScreen;
 
 fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<Res<FailReason>>) {
-    let mut text_style = TextStyle::default();
-    text_style.font_size = 24.0;
+    let text_font = TextFont {
+        font_size: 24.0,
+        ..default()
+    };
 
-    commands.spawn((FinishScreen, NodeBundle {
-        style: Style {
+    commands.spawn((
+        FinishScreen,
+        Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             justify_content: JustifyContent::Center,
@@ -32,9 +35,8 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        background_color: Color::srgba(0.15, 0.15, 0.15, 0.7).into(),
-        ..default()
-    })).with_children(|parent| {
+        BackgroundColor(Color::srgba(0.15, 0.15, 0.15, 0.7)),
+    )).with_children(|parent| {
         let text = if let Some(fail) = fail {
             match fail.as_ref() {
                 FailReason::SheepDied => format!("Uh-oh. \nWhat a bad dog. Half your sheep have been eaten, you fleay mutt. Await your punishment. \nIf you're alive afterwards, give it a decent try."),
@@ -44,13 +46,14 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
             format!("Good dog! \nYou get to live another day. \nYou did well enough. Your master will be waiting for you tomorrow.")
         };
 
-        parent.spawn(TextBundle::from_section(
-            format!("{} \nScore: {:.1}", text, score.0), 
-            TextStyle::default()
+        parent.spawn((
+            Text::new(format!("{} \nScore: {:.1}", text, score.0)),
+            TextFont::default(),
         ));
 
-        parent.spawn(ButtonBundle {
-            style: Style {
+        parent.spawn((
+            Button,
+            Node {
                 width: Val::Px(150.0),
                 height: Val::Px(65.0),
                 justify_content: JustifyContent::Center,
@@ -58,14 +61,14 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
                 border: UiRect::all(Val::Px(5.0)),
                 ..default()
             },
-            background_color: Color::srgb(0.15, 0.15, 0.15).into(),
-            border_color: Color::WHITE.into(),
-            ..default()
-        }).with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Ok",
-                text_style.clone()
+            BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
+            BorderColor(Color::WHITE),)
+        ).with_children(|parent| {
+            parent.spawn((
+                Text::new("Ok"),
+                text_font.clone(),
             ));
+            
         });
     });
 }
