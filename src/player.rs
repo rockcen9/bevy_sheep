@@ -258,7 +258,7 @@ fn player_movemnt_by_mouse(
         return;
     };
 
-    let Some(distance) = ray.intersect_plane(Vec3::Y * transform.translation.y, Plane3d::new(Vec3::Y)) else {
+    let Some(distance) = ray.intersect_plane(Vec3::Y * transform.translation.y, InfinitePlane3d::new(Vec3::Y)) else {
         return;
     };
 

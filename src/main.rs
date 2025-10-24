@@ -8,20 +8,23 @@ use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
 use bevy_game::GamePlugin;
 // ToDo: Replace bevy_game with your new crate name.
-use bevy::asset::AssetMetaCheck;
+use bevy::asset::{AssetMetaCheck, AssetPlugin};
 use bevy_game::test_level::LevelSize;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+// // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use std::io::Cursor;
 use winit::window::Icon;
 
 fn main() {
     App::new()
         .insert_resource(Msaa::Off)
-        .insert_resource(AssetMetaCheck::Never)
-        .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
+        .insert_resource(ClearColor(Color::srgb(0.4, 0.4, 0.4)))
         .init_resource::<LevelSize>()
         .add_plugins(
             DefaultPlugins
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "That's a LOT of sheep".to_string(), // ToDo
@@ -38,7 +41,7 @@ fn main() {
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(GamePlugin)
         .add_systems(Startup, set_window_icon)
-        .add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(WorldInspectorPlugin::new())
         .run();
 }
 

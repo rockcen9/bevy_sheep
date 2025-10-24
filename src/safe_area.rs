@@ -2,7 +2,7 @@
 
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, color::palettes::css};
 use rand::Rng;
 
 use crate::sheep::Sheep;
@@ -127,11 +127,11 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea, Without<HiddenSafe
                     Vec3::new(pos.x, 0.001, pos.y),
                     Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0),
                     *size,
-                    Color::RED,
+                    Color::from(css::RED),
                 );
             }
             SafeArea::Circle { pos, radius } => {
-                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Direction3d::Y, *radius, Color::RED);
+                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Dir3::Y, *radius, Color::from(css::RED));
             }
         }
     }

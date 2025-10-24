@@ -1,4 +1,4 @@
-use bevy::{prelude::*, audio::{PlaybackMode, Volume}};
+use bevy::{prelude::*, audio::{PlaybackMode, Volume}, color::palettes::css};
 
 use crate::{
     common_storage::CommonStorage,
@@ -117,7 +117,7 @@ fn spawn_torch(
         let light_id = commands
             .spawn(SpotLightBundle {
                 spot_light: SpotLight {
-                    color: Color::ORANGE,
+                    color: css::ORANGE.into(),
                     intensity: 0.0,
                     radius: 0.0,
                     range: torch_radius * 10.0,
@@ -137,7 +137,7 @@ fn spawn_torch(
         let torch = TorchBase {
             lit: false,
             fuel: 0.0,
-            color: Color::ORANGE,
+            color: css::ORANGE.into(),
             max_fuel: 1.0,
             radius: torch_radius,
             light: light_id,

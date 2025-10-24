@@ -1,4 +1,4 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, color::Srgba};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
@@ -45,7 +45,7 @@ pub fn setup(
             transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
             directional_light: DirectionalLight {
                 shadows_enabled: true,
-                color: Color::hex(DAY_SUN_COLOR).unwrap(),
+                color: Srgba::hex(DAY_SUN_COLOR).unwrap().into(),
                 illuminance: SUN_BASE_ILLUMINANCE,
                 ..default()
             },
@@ -109,7 +109,7 @@ pub fn setup(
         .spawn(PbrBundle {
             mesh: meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0)),
             material: materials.add(StandardMaterial {
-                base_color: Color::hex("5d9669").unwrap(),
+                base_color: Srgba::hex("5d9669").unwrap().into(),
                 reflectance: 0.05,
                 ..default()
             }),

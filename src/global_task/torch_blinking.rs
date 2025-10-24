@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::hashbrown::HashSet};
+use bevy::{prelude::*, utils::hashbrown::HashSet, color::palettes::css};
 use rand::Rng;
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
     GameSet, GameState,
 };
 
-pub const BAD_TORCH_COLOR: Color = Color::rgb(1.0, 0.0, 0.0);
+pub const BAD_TORCH_COLOR: Color = Color::srgb(1.0, 0.0, 0.0);
 
 pub struct TorchBlinkingPlugin;
 
@@ -179,7 +179,7 @@ fn delight(
         delight.be_scared_time -= time.delta_seconds();
         if delight.be_scared_time > 0.0 {
             if let Ok(mut light) = lights.get_mut(base.light) {
-                light.color = Color::ORANGE_RED;
+                light.color = css::ORANGE_RED.into();
             }
             continue;
         }

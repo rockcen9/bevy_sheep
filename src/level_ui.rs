@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, color::palettes::css};
 
 use crate::{storyteller::LevelTimer, GameStuff, player::Stamina, GameSet};
 
@@ -61,7 +61,7 @@ fn create_level_ui_system(
                     min_height: Val::Px(80.0),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),
+                background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
                 ..default()
             },
             LevelUi,
@@ -128,7 +128,7 @@ fn spawn_bar(parent: &mut ChildBuilder) {
                                 width : Val::Percent(50.0),
                                 ..Default::default()
                             },
-                            background_color: Color::GREEN.into(),
+                            background_color: css::GREEN.into(),
                             ..Default::default()
                         },
                         StaminaState,
@@ -154,8 +154,8 @@ fn show_stamina(
     style.width = Val::Percent(stamina.value * 100.0);
 
     if stamina.blocked {
-        background_color.0 = Color::ORANGE_RED;
+        background_color.0 = css::ORANGE_RED.into();
     } else {
-        background_color.0 = Color::GREEN;
+        background_color.0 = css::GREEN.into();
     }
 }

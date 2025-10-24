@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, color::palettes::css};
 
 use crate::{GameSet, GameState};
 
@@ -81,7 +81,7 @@ fn button_system(
                 next_state.set(GameState::Playing);
             }
             Interaction::Hovered => {
-                *color = BackgroundColor(Color::DARK_GRAY);
+                *color = BackgroundColor(css::DARK_GRAY.into());
             }
             Interaction::None => {
                 *color = BackgroundColor(Color::BLACK);

@@ -49,7 +49,7 @@ pub fn setup_diagnostic_panel(mut commands: Commands) {
 
                 ..default()
             },
-            background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),
+            background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
             ..default()
         })
         .insert(DiagnosticPanel)

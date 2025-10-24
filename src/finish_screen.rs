@@ -32,7 +32,7 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        background_color: Color::rgba(0.15, 0.15, 0.15, 0.7).into(),
+        background_color: Color::srgba(0.15, 0.15, 0.15, 0.7).into(),
         ..default()
     })).with_children(|parent| {
         let text = if let Some(fail) = fail {
@@ -58,7 +58,7 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
                 border: UiRect::all(Val::Px(5.0)),
                 ..default()
             },
-            background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+            background_color: Color::srgb(0.15, 0.15, 0.15).into(),
             border_color: Color::WHITE.into(),
             ..default()
         }).with_children(|parent| {
@@ -89,10 +89,10 @@ fn finish_screen_system(
                 next_state.set(GameState::Menu);
             }
             Interaction::Hovered => {
-                *color = Color::rgb(0.25, 0.25, 0.25).into();
+                *color = Color::srgb(0.25, 0.25, 0.25).into();
             }
             Interaction::None => {
-                *color = Color::rgb(0.15, 0.15, 0.15).into();
+                *color = Color::srgb(0.15, 0.15, 0.15).into();
             }
         }
     }

@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, color::{Srgba, LinearRgba}};
 
 use crate::{
     safe_area::{LandSafeArea, SafeArea},
@@ -121,7 +121,7 @@ fn sunday_system(
 
     if uniform_time < DAY_TIME {
         let sun_falloff = 1.0;
-        ambient_light.color = Color::hex(AMBIENT_DAY_COLOR).unwrap();
+        ambient_light.color = Srgba::hex(AMBIENT_DAY_COLOR).unwrap().into();
         let sun_angle = sun_falloff * std::f32::consts::PI / 4.0;
         let pos = transform.translation.clone();
         transform.look_at(
@@ -130,8 +130,8 @@ fn sunday_system(
         );
     } else if uniform_time < EVENING_TIME {
         let sun_falloff = 1.0 - (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
-        let color = Color::hex(DAY_SUN_COLOR).unwrap() * sun_falloff
-            + Color::hex(EVENING_SUN_COLOR).unwrap() * (1.0 - sun_falloff);
+        let color: Color = (LinearRgba::from(Srgba::hex(DAY_SUN_COLOR).unwrap()) * sun_falloff
+            + LinearRgba::from(Srgba::hex(EVENING_SUN_COLOR).unwrap()) * (1.0 - sun_falloff)).into();
         let sun_angle = sun_falloff * std::f32::consts::PI / 4.0;
         let illuminance =
             SUN_BASE_ILLUMINANCE * sun_falloff + SUN_EVENING_ILLUMINANCE * (1.0 - sun_falloff);
@@ -144,10 +144,10 @@ fn sunday_system(
         light.color = color;
         light.illuminance = illuminance;
 
-        ambient_light.color = Color::hex(AMBIENT_DAY_COLOR).unwrap();
+        ambient_light.color = Srgba::hex(AMBIENT_DAY_COLOR).unwrap().into();
     } else if uniform_time < NIGHT_TIME {
         let sun_falloff = 1.0 - (uniform_time - EVENING_TIME) / (NIGHT_TIME - EVENING_TIME);
-        let color = Color::hex(NIGHT_SUN_COLOR).unwrap();
+        let color = Srgba::hex(NIGHT_SUN_COLOR).unwrap().into();
         let sun_angle = (1.0 - sun_falloff) * std::f32::consts::PI / 4.0;
         let illuminance = SUN_NIGHT_ILLUMINANCE;
         let pos = transform.translation.clone();
@@ -158,8 +158,8 @@ fn sunday_system(
         light.color = color;
         light.illuminance = illuminance;
 
-        ambient_light.color = Color::hex(AMBIENT_NIGHT_COLOR).unwrap() * (1.0 - sun_falloff)
-            + Color::hex(AMBIENT_DAY_COLOR).unwrap() * sun_falloff;
+        ambient_light.color = (LinearRgba::from(Srgba::hex(AMBIENT_NIGHT_COLOR).unwrap()) * (1.0 - sun_falloff)
+            + LinearRgba::from(Srgba::hex(AMBIENT_DAY_COLOR).unwrap()) * sun_falloff).into();
         ambient_light.brightness =
             AMBIENT_NIGHT_ILLUMINANCE * (1.0 - sun_falloff) + sun_falloff * AMBIENT_DAY_ILLUMINANCE;
     } else {
