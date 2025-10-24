@@ -50,7 +50,7 @@ fn setup_corpse_storage(
             reflectance: 0.1,
             ..default()
         }),
-        mesh: meshs.add(shape::Plane::default().into())
+        mesh: meshs.add(Rectangle::default())
     });
 }
 
@@ -64,7 +64,7 @@ fn spawn_corpse_system(
     mut event : EventReader<SpawnCorpse>,
     storage : Res<CorpseStoage>
 ) {
-    for event in event.iter() {
+    for event in event.read() {
         commands.spawn((
             PbrBundle {
                 mesh: storage.mesh.clone(),

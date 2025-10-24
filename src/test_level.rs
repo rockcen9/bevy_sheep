@@ -35,23 +35,25 @@ pub fn setup(
     level_size: Res<LevelSize>,
     mut create_level_ui: EventWriter<CreateLevelUi>,
     mut spawn_shepherd: EventWriter<SpawnShepherd>,
-    mut sprite_materials : ResMut<Assets<SpriteMaterial>>,
+    mut sprite_materials: ResMut<Assets<SpriteMaterial>>,
 ) {
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
     cascades.maximum_distance = 100.0;
-    commands.spawn(DirectionalLightBundle {
-        transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-        directional_light: DirectionalLight {
-            shadows_enabled: true,
-            color: Color::hex(DAY_SUN_COLOR).unwrap(),
-            illuminance: SUN_BASE_ILLUMINANCE,
-            ..default()
-        },
+    commands
+        .spawn(DirectionalLightBundle {
+            transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
+            directional_light: DirectionalLight {
+                shadows_enabled: true,
+                color: Color::hex(DAY_SUN_COLOR).unwrap(),
+                illuminance: SUN_BASE_ILLUMINANCE,
+                ..default()
+            },
 
-        cascade_shadow_config: cascades.build(),
-        ..default()
-    }).insert(GameStuff);
+            cascade_shadow_config: cascades.build(),
+            ..default()
+        })
+        .insert(GameStuff);
 
     //ambient ligjt
     commands.insert_resource(AmbientLight {
@@ -105,19 +107,22 @@ pub fn setup(
     //green plane
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane {
-                size: tree_r * 2.0,
-                ..default()
-            })),
+            mesh: meshes.add(Rectangle::new(tree_r * 2.0, tree_r * 2.0)),
             material: materials.add(StandardMaterial {
                 base_color: Color::hex("5d9669").unwrap(),
                 reflectance: 0.05,
                 ..default()
             }),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
+                EulerRot::XYZ,
+                -PI / 2.0,
+                0.0,
+                0.0,
+            )),
             ..default()
         })
-        .insert(GameStuff);
+        .insert(GameStuff)
+        .insert(Name::new("Green Plane"));
 
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),

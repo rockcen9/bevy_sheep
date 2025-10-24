@@ -10,7 +10,7 @@ use bevy::{
 use crate::{
     get_sprite_rotation,
     physics::Velocity,
-    sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
+    sprite_material::create_plane_mesh,
     GameStuff, GameSet, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim},
 };
 
@@ -39,7 +39,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnPlayer>()
             .add_event::<Bark>()
-            .add_state::<MovementStyle>()
+            .init_state::<MovementStyle>()
             .add_systems(Update, spawn_player_by_event.in_set(GameSet::Playing))
             .add_systems(
                 Update,
@@ -65,7 +65,7 @@ pub struct Stamina {
 fn change_movement_style(
     mut next_state: ResMut<NextState<MovementStyle>>,
     current_state: Res<State<MovementStyle>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Tab) {
         if *current_state.get() == MovementStyle::Mouse {
@@ -199,7 +199,7 @@ fn spawn_player_by_event(
                     settings: PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
-                        volume: Volume::new_relative(0.5),
+                        volume: Volume::new(0.5),
                         ..default()
                     }
                 },
@@ -213,7 +213,7 @@ fn spawn_player_by_event(
                     settings: PlaybackSettings {
                         paused: true,
                         mode: PlaybackMode::Loop,
-                        volume: Volume::new_relative(2.0),
+                        volume: Volume::new(2.0),
                         ..default()
                     }
                 }
@@ -234,7 +234,7 @@ fn player_movemnt_by_mouse(
     time: Res<Time>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>,
 ) {
     let Ok((transform, mut vel, mut stamine)) = player_query.get_single_mut() else {
@@ -258,7 +258,7 @@ fn player_movemnt_by_mouse(
         return;
     };
 
-    let Some(distance) = ray.intersect_plane(Vec3::Y * transform.translation.y, Vec3::Y) else {
+    let Some(distance) = ray.intersect_plane(Vec3::Y * transform.translation.y, Plane3d::new(Vec3::Y)) else {
         return;
     };
 
@@ -301,7 +301,7 @@ fn player_movemnt_by_mouse(
 
 pub fn bark(
     player_query: Query<&Transform, With<Player>>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     mut event_writer: EventWriter<Bark>,
     mut stamina : Query<&mut Stamina>,
     time : Res<Time>,
@@ -359,7 +359,7 @@ pub fn bark(
 
 fn player_movemnt_by_wasd(
     mut player_query: Query<(&mut Velocity, &mut Stamina), With<Player>>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>
 ) {
@@ -376,19 +376,19 @@ fn player_movemnt_by_wasd(
 
     let mut dir = Vec3::ZERO;
 
-    if input.pressed(KeyCode::W) {
+    if input.pressed(KeyCode::KeyW) {
         dir += Vec3::new(0.0, 0.0, -1.0);
     }
 
-    if input.pressed(KeyCode::S) {
+    if input.pressed(KeyCode::KeyS) {
         dir += Vec3::new(0.0, 0.0, 1.0);
     }
 
-    if input.pressed(KeyCode::A) {
+    if input.pressed(KeyCode::KeyA) {
         dir += Vec3::new(-1.0, 0.0, 0.0);
     }
 
-    if input.pressed(KeyCode::D) {
+    if input.pressed(KeyCode::KeyD) {
         dir += Vec3::new(1.0, 0.0, 0.0);
     }
 
@@ -463,7 +463,7 @@ fn camera_movement(
         *sun = cascade.build();
     }
 
-    let cam_frw = camera.forward();
+    let cam_frw = *camera.forward();
     let next_cam_pos = player.translation - cam_frw * distance.0;
 
     let dp = next_cam_pos - camera.translation;
@@ -486,20 +486,20 @@ fn set_cam_distance(
         return;
     };
 
-    let dist = (player.translation - camera.translation).dot(camera.forward());
+    let dist = (player.translation - camera.translation).dot(*camera.forward());
 
     commands.entity(e).insert(CameraDistance(dist));
 }
 
 fn set_anim_state(
     mut player : Query<(&mut AutoAnim<PlayerAnim>, &Velocity, &mut Transform)>,
-    input: Res<Input<KeyCode>>
+    input: Res<ButtonInput<KeyCode>>
 ) {
     let Ok((mut player, vel, mut t)) = player.get_single_mut() else {
         return;
     };
 
-    let moving = input.any_pressed([KeyCode::W, KeyCode::S, KeyCode::A, KeyCode::D]);
+    let moving = input.any_pressed([KeyCode::KeyW, KeyCode::KeyS, KeyCode::KeyA, KeyCode::KeyD]);
     let barking = input.pressed(KeyCode::Space);
     let big_bark = input.pressed(KeyCode::ControlLeft);
 

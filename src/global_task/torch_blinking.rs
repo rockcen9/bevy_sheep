@@ -1,5 +1,5 @@
-use bevy::{prelude::*, transform::commands, utils::hashbrown::HashSet};
-use rand::{seq::SliceRandom, Rng};
+use bevy::{prelude::*, utils::hashbrown::HashSet};
+use rand::Rng;
 
 use crate::{
     level_ui::TaskText,
@@ -82,7 +82,7 @@ fn start_fire_problems(
         .filter(|(_, _, count, _)| *count > 0)
         .collect::<Vec<_>>();
 
-    if (problem_torches.len() == 0) {
+    if problem_torches.len() == 0 {
         global_task.set(GlobalTask::None);
         return;
     }

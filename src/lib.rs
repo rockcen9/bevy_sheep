@@ -26,7 +26,7 @@ use std::f32::consts::PI;
 #[cfg(feature = "dev")]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
-use bevy::{app::App, core_pipeline::clear_color::ClearColorConfig};
+use bevy::{app::App, render::camera::ClearColorConfig};
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -57,7 +57,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>();
+        app.init_state::<GameState>();
 
         //Terrible set configuration
         app.configure_sets(
@@ -133,18 +133,17 @@ fn loading(mut next_state: ResMut<NextState<GameState>>) {
 }
 
 fn camera_setup(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-        camera: Camera {
-            hdr: true,
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
+            camera: Camera {
+                hdr: true,
+                clear_color: ClearColorConfig::Custom(Color::BLACK),
+                ..default()
+            },
             ..default()
         },
-        camera_3d: Camera3d {
-            clear_color: ClearColorConfig::Custom(Color::BLACK),
-            ..default()
-        },
-        ..default()
-    });
+    ));
 }
 
 #[derive(Component)]

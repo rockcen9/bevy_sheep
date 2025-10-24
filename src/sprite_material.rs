@@ -5,12 +5,13 @@ use bevy::{
     prelude::*,
     render::{
         mesh::Indices,
+        render_asset::RenderAssetUsages,
         render_resource::{AsBindGroup, PrimitiveTopology, ShaderRef},
     },
 };
 
 pub fn create_plane_mesh() -> Mesh {
-    Mesh::new(PrimitiveTopology::TriangleList)
+    Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
         .with_inserted_attribute(
             Mesh::ATTRIBUTE_POSITION,
             vec![
@@ -33,7 +34,7 @@ pub fn create_plane_mesh() -> Mesh {
                 [0.0, -1.0, 0.0],
             ],
         )
-        .with_indices(Some(Indices::U32(vec![0, 1, 2, 2, 1, 3])))
+        .with_inserted_indices(Indices::U32(vec![0, 1, 2, 2, 1, 3]))
 }
 
 pub type SpriteMaterial = ExtendedMaterial<StandardMaterial, SpriteExtension>;

@@ -158,7 +158,7 @@ fn bark_system(
     let Ok((entity, transform)) = query.get_single() else {
         return;
     };
-    for event in events.iter() {
+    for event in events.read() {
         if (transform.translation - event.position).length() < event.radius {
             //wakeup shepherd
             commands.entity(entity).insert(IgniteAllTorhes);

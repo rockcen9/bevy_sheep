@@ -206,7 +206,7 @@ fn catch_system(
                         source: asset_server.load("audio/kill_sound.ogg"),
                         settings: PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: Volume::new_relative(0.7),
+                            volume: Volume::new(0.7),
                             spatial: true,
                             ..default()
                         },

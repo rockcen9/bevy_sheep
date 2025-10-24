@@ -131,7 +131,7 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea, Without<HiddenSafe
                 );
             }
             SafeArea::Circle { pos, radius } => {
-                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Vec3::Y, *radius, Color::RED);
+                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Direction3d::Y, *radius, Color::RED);
             }
         }
     }

@@ -63,13 +63,10 @@ fn setup(
         brightness: 1.0,
     });
 
-    let square = meshes.add(
-        shape::Plane {
-            size: 1.0,
-            ..default()
-        }
-        .into(),
-    );
+    let square = meshes.add(shape::Plane {
+        size: 1.0,
+        ..default()
+    });
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 

@@ -1,7 +1,6 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use rand::Rng;
 
 use crate::{
     safe_area::{LandSafeArea, SafeArea},
@@ -16,12 +15,12 @@ pub const EVENING_SUN_COLOR: &str = "cfaf56";
 pub const DUSK_SUN_COLOR: &str = "f2ecbe";
 pub const NIGHT_SUN_COLOR: &str = "506886";
 
-pub const SUN_BASE_ILLUMINANCE: f32 = 50000.0;
+pub const SUN_BASE_ILLUMINANCE: f32 = 50000.0 / 5.;
 pub const AMBIENT_BASE_ILLUMINANCE: f32 = 1.0;
 
-pub const SUN_EVENING_ILLUMINANCE: f32 = 10000.0;
-pub const SUN_DUSK_ILLUMINANCE: f32 = 10000.0;
-pub const SUN_NIGHT_ILLUMINANCE: f32 = 10000.0;
+pub const SUN_EVENING_ILLUMINANCE: f32 = 10000.0 / 5.;
+pub const SUN_DUSK_ILLUMINANCE: f32 = 10000.0 / 5.;
+pub const SUN_NIGHT_ILLUMINANCE: f32 = 10000.0 / 5.;
 
 pub const AMBIENT_DAY_COLOR: &str = "2ba4a9";
 pub const AMBIENT_NIGHT_COLOR: &str = "643a69";
@@ -40,7 +39,7 @@ impl Plugin for SundayPlugin {
             Update,
             (set_day_state, set_episode_time).in_set(GameSet::Playing),
         );
-        app.add_state::<DayState>();
+        app.init_state::<DayState>();
 
         app.add_systems(
             Update,

@@ -50,7 +50,7 @@ fn torch_audio(
                     source : asset_server.load("audio/torch.ogg"),
                     settings : PlaybackSettings {
                         mode : PlaybackMode::Loop,
-                        volume : Volume::new_relative(0.5),
+                        volume : Volume::new(0.5),
                         ..default()
                     }
                 },

@@ -1,6 +1,6 @@
-use std::{f32::consts::PI, time::Duration, fmt::format};
+use std::{f32::consts::PI, time::Duration};
 
-use bevy::{prelude::*, utils::HashSet};
+use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
@@ -235,7 +235,7 @@ fn init_random_walk(
 ) {
     let mut rand = rand::thread_rng();
     for ev in event_reader.read() {
-        if let Ok(t) = poses.get_component::<Transform>(ev.e) {
+        if let Ok(t) = poses.get(ev.e) {
             // info!("init random walk for {:?}", ev.e);
             let r = rand.gen_range(0.0..RANDOM_WALK_RANGE);
             let angle = rand.gen_range(0.0..PI * 2.0);
@@ -283,7 +283,7 @@ fn init_safeareawalk_walk(
     };
 
     for ev in event_reader.read() {
-        if let Ok(t) = poses.get_component::<Transform>(ev.e) {
+        if let Ok(t) = poses.get(ev.e) {
             let inside_point = safearea.get_random_point_inside(level_size.0 / 3.0);
             let dir = (inside_point - t.translation).normalize_or_zero();
             commands.entity(ev.e).insert(GoTo {
@@ -349,7 +349,7 @@ pub fn init_escape(
     safe_zones: Query<&SafeArea>,
 ) {
     for ev in event_reader.read() {
-        if let Ok(t) = poses.get_component::<Transform>(ev.e) {
+        if let Ok(t) = poses.get(ev.e) {
             //find nearest safe zone
             let mut nearest = None;
             let mut nearest_dist = f32::MAX;

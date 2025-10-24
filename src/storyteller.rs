@@ -35,7 +35,7 @@ impl Plugin for StorytellerPlugin {
         )
         .init_resource::<NextTaskDelay>()
         .add_systems(OnEnter(GlobalTask::None), setup_delay)
-        .add_state::<GlobalTask>();
+        .init_state::<GlobalTask>();
     }
 }
 
